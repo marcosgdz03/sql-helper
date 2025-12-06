@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 export async function showSqlSnippets(editor: vscode.TextEditor) {
-
     const sqlItems = [
         { label: 'SELECT', snippet: 'SELECT * FROM ${1:tabla};' },
         { label: 'SELECT WHERE', snippet: 'SELECT * FROM ${1:tabla} WHERE ${2:condicion};' },
@@ -98,13 +97,15 @@ mysql -u \${1:usuario} -p \${2:database} < backup.sql`
     ];
 
     const pick = await vscode.window.showQuickPick(
-        sqlItems.map(i => ({ label: i.label, detail: i.snippet })),
+        sqlItems.map((i) => ({ label: i.label, detail: i.snippet })),
         { placeHolder: 'Snippet SQL / Crear ficheros' }
     );
 
-    if (!pick) return;
+    if (!pick) {
+        return;
+    }
 
-    // Si es uno de los ficheros especiales, crea un archivo nuevo
+    // Ficheros que se crean en el proyecto
     const filesToCreate = ['Crear fichero create_tables.sql', 'Crear fichero seed_data.sql'];
     if (filesToCreate.includes(pick.label)) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -114,7 +115,12 @@ mysql -u \${1:usuario} -p \${2:database} < backup.sql`
         }
 
         const folderPath = workspaceFolders[0].uri.fsPath;
-        const fileName = pick.label === 'Crear fichero create_tables.sql' ? 'create_tables.sql' : 'seed_data.sql';
+        let fileName = '';
+        switch (pick.label) {
+            case 'Crear fichero create_tables.sql': { fileName = 'create_tables.sql'; break; }
+            case 'Crear fichero seed_data.sql': { fileName = 'seed_data.sql'; break; }
+        }
+
         const filePath = path.join(folderPath, fileName);
 
         if (fs.existsSync(filePath)) {

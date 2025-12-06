@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 export async function showJsSnippets(editor: vscode.TextEditor) {
-
     const jsItems = [
         {
             label: 'Crear fichero conexión MySQL',
@@ -125,11 +124,13 @@ console.log(rows);`
     ];
 
     const pick = await vscode.window.showQuickPick(
-        jsItems.map(i => ({ label: i.label, detail: i.snippet })),
+        jsItems.map((i) => ({ label: i.label, detail: i.snippet })),
         { placeHolder: 'Snippet JavaScript/TypeScript DB / Crear ficheros' }
     );
 
-    if (!pick) return;
+    if (!pick) {
+        return;
+    }
 
     const filesToCreate = [
         'Crear fichero conexión MySQL',
@@ -149,11 +150,11 @@ console.log(rows);`
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case 'Crear fichero conexión MySQL': fileName = 'dbConnection.js'; break;
-            case 'Crear fichero conexión PostgreSQL': fileName = 'pgConnection.js'; break;
-            case 'Crear fichero Sequelize': fileName = 'sequelize.js'; break;
-            case 'Script init.sql': fileName = 'init.sql'; break;
-            case 'Script seed.js': fileName = 'seed.js'; break;
+            case 'Crear fichero conexión MySQL': { fileName = 'dbConnection.js'; break; }
+            case 'Crear fichero conexión PostgreSQL': { fileName = 'pgConnection.js'; break; }
+            case 'Crear fichero Sequelize': { fileName = 'sequelize.js'; break; }
+            case 'Script init.sql': { fileName = 'init.sql'; break; }
+            case 'Script seed.js': { fileName = 'seed.js'; break; }
         }
 
         const filePath = path.join(folderPath, fileName);

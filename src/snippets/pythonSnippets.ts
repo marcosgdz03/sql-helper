@@ -132,11 +132,13 @@ conn.commit()`
     ];
 
     const pick = await vscode.window.showQuickPick(
-        pyItems.map(i => ({ label: i.label, detail: i.snippet })),
+        pyItems.map((i) => ({ label: i.label, detail: i.snippet })),
         { placeHolder: 'Snippet Python DB / Crear ficheros' }
     );
 
-    if (!pick) return;
+    if (!pick) {
+        return;
+    }
 
     // Ficheros que se crean en el proyecto
     const filesToCreate = [
@@ -157,11 +159,11 @@ conn.commit()`
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case 'Crear fichero conexión SQLite': fileName = 'sqlite_connection.py'; break;
-            case 'Crear fichero conexión PostgreSQL': fileName = 'postgres_connection.py'; break;
-            case 'Crear fichero conexión MySQL': fileName = 'mysql_connection.py'; break;
-            case 'Script init.sql': fileName = 'init.sql'; break;
-            case 'Script seed.sql': fileName = 'seed.sql'; break;
+            case 'Crear fichero conexión SQLite': { fileName = 'sqlite_connection.py'; break; }
+            case 'Crear fichero conexión PostgreSQL': { fileName = 'postgres_connection.py'; break; }
+            case 'Crear fichero conexión MySQL': { fileName = 'mysql_connection.py'; break; }
+            case 'Script init.sql': { fileName = 'init.sql'; break; }
+            case 'Script seed.sql': { fileName = 'seed.sql'; break; }
         }
 
         const filePath = path.join(folderPath, fileName);

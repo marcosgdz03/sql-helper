@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 export async function showJavaSnippets(editor: vscode.TextEditor) {
-
     const javaItems = [
         {
             label: 'Crear fichero DatabaseConnection',
@@ -98,13 +97,14 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`
     ];
 
     const pick = await vscode.window.showQuickPick(
-        javaItems.map(i => ({ label: i.label, detail: i.snippet })),
+        javaItems.map((i) => ({ label: i.label, detail: i.snippet })),
         { placeHolder: 'Método JDBC / Crear ficheros / Transacciones' }
     );
 
-    if (!pick) return;
+    if (!pick) {
+        return;
+    }
 
-    // Ficheros que se crean en el proyecto
     const filesToCreate = [
         'Crear fichero DatabaseConnection',
         'Crear fichero BasicQueries',
@@ -123,11 +123,26 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case 'Crear fichero DatabaseConnection': fileName = 'DatabaseConnection.java'; break;
-            case 'Crear fichero BasicQueries': fileName = 'BasicQueries.java'; break;
-            case 'Crear fichero QueryExecutor': fileName = 'QueryExecutor.java'; break;
-            case 'Crear fichero init.sql': fileName = 'init.sql'; break;
-            case 'Crear fichero seed.sql': fileName = 'seed.sql'; break;
+            case 'Crear fichero DatabaseConnection': {
+                fileName = 'DatabaseConnection.java';
+                break;
+            }
+            case 'Crear fichero BasicQueries': {
+                fileName = 'BasicQueries.java';
+                break;
+            }
+            case 'Crear fichero QueryExecutor': {
+                fileName = 'QueryExecutor.java';
+                break;
+            }
+            case 'Crear fichero init.sql': {
+                fileName = 'init.sql';
+                break;
+            }
+            case 'Crear fichero seed.sql': {
+                fileName = 'seed.sql';
+                break;
+            }
         }
 
         const filePath = path.join(folderPath, fileName);
@@ -143,6 +158,5 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`
         return;
     }
 
-    // Insertar snippet normal en el editor activo
     await editor.insertSnippet(new vscode.SnippetString(pick.detail!));
 }
