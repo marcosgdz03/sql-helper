@@ -2,7 +2,7 @@
   "name": "sql-helper",
   "displayName": "SQL Helper",
   "description": "Extensión de ayuda para insertar snippets SQL, Java, Python y JS",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "marcosgdz03",
   "engines": {
     "vscode": "^1.106.1"
@@ -19,6 +19,11 @@
     "onCommand:sql-helper.insertSnippet"
   ],
   "main": "./out/extension.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marcosgdz03/sql-helper.git"
+  },
+  "license": "MIT",
   "contributes": {
     "commands": [
       {
