@@ -2,7 +2,7 @@
   "name": "sql-helper",
   "displayName": "SQL Helper",
   "description": "Extensión de ayuda para insertar snippets SQL, Java, Python y JS",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "marcosgdz03",
   "engines": {
     "vscode": "^1.106.1"
