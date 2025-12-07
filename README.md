@@ -1,12 +1,16 @@
-# SQL Helper
+# 🗄️ SQL Helper
 
-**SQL Helper** es una extensión avanzada para **Visual Studio Code** que acelera el desarrollo con bases de datos proporcionando **snippets de código profesionales y reutilizables** para **SQL, Java JDBC, Python y JavaScript**.
+**SQL Helper** es una extensión avanzada para **Visual Studio Code** que acelera el desarrollo con bases de datos proporcionando:
 
-Con esta extensión puedes generar código listo para producción en segundos, desde consultas SQL complejas hasta métodos completos de CRUD en varios lenguajes de programación.
+1. **70+ Snippets profesionales** para SQL, Java JDBC, Python y JavaScript/TypeScript
+2. **Analizador SQL inteligente** que detecta errores en cualquier lenguaje
+3. **Formateador SQL** para mejorar legibilidad automáticamente
+
+Genera código **listo para producción** en segundos, desde consultas SQL complejas hasta métodos completos de CRUD con transacciones y manejo de errores.
 
 ---
 
-## 🚀 Características Principales
+## 🎯 Características Principales
 
 ### 📊 **Snippets SQL** (40+ templates)
 - **Selección**: SELECT básico, WHERE, LIMIT, OFFSET, ORDER BY, GROUP BY, DISTINCT, JOINs
@@ -40,13 +44,38 @@ Con esta extensión puedes generar código listo para producción en segundos, d
 - Transacciones con rollback
 - ORM integration (Sequelize)
 
+### 🔍 **Analizador SQL (NUEVO)** - Detecta errores automáticamente
+- Detecta **8+ tipos de errores**:
+  - Falta de punto y coma (`;`)
+  - Comillas no balanceadas (`'`, `"`)
+  - Paréntesis desbalanceados
+  - SELECT sin FROM
+  - INSERT sin VALUES
+  - **UPDATE/DELETE SIN WHERE** (peligroso) ⚠️
+  - Palabras reservadas usadas como nombres
+- Funciona en múltiples lenguajes:
+  - `.sql` - Archivos SQL puros
+  - `.java` - Dentro de strings: `"SELECT * FROM..."`
+  - `.js/.ts` - Template literals: `` const sql = `SELECT...` ``
+  - `.py` - Strings Python: `sql = "SELECT..."`
+- Muestra errores en:
+  - **Panel Problems** (integración nativa VS Code)
+  - **QuickPick interactivo** (selecciona para detalles)
+  - **Output Channel** (logs detallados)
+
+### 🎨 **Formateador SQL (NUEVO)** - Mejora legibilidad
+- Reformatea consultas automáticamente
+- Añade saltos de línea en keywords (SELECT, FROM, WHERE, JOIN, etc.)
+- Limpia espacios en blanco excesivos
+- Funciona en todos los lenguajes soportados
+
 ### ✨ **Características Adicionales**
 - ✅ Detección automática del lenguaje
 - ✅ Búsqueda inteligente con descripciones
-- ✅ Emojis para categorización visual
-- ✅ Logging en output channel
-- ✅ Manejo robusto de errores
-- ✅ Keybinding personalizable (`Ctrl+Alt+S`)
+- ✅ Emojis para categorización visual (📖 SELECT, ✏️ CRUD, 🏗️ DDL, etc.)
+- ✅ Logging completo en output channel con timestamps
+- ✅ Manejo robusto de errores con feedback usuario
+- ✅ Keybindings personalizables (Ctrl+Alt+S/A/F)
 
 ---
 
@@ -70,32 +99,187 @@ code --install-extension sql-helper-*.vsix
 
 ---
 
+## ⌨️ Keybindings Rápidos
+
+| Comando | Shortcut | Descripción |
+|---------|----------|-------------|
+| **Insertar Snippet** | `Ctrl+Alt+S` | Abre menú de snippets |
+| **Analizar SQL** | `Ctrl+Alt+A` | Detecta errores SQL |
+| **Formatear SQL** | `Ctrl+Alt+F` | Formatea consulta |
+
+> **macOS**: Reemplaza `Ctrl` con `Cmd`
+
+---
+
 ## 💡 Uso Rápido
 
-1. **Abre un archivo** con extensión `.sql`, `.java`, `.py`, `.js` o `.ts`
-2. **Presiona** `Ctrl+Alt+S` (o usa Ctrl+Shift+P y busca "SQL Helper")
-3. **Selecciona** el snippet deseado
-4. **Listo** - El código se inserta automáticamente
+### 1️⃣ Insertar Snippet (`Ctrl+Alt+S`)
+```
+1. Abre archivo .sql, .java, .py, .js o .ts
+2. Presiona Ctrl+Alt+S
+3. Escribe para buscar (ej: "SELECT", "INSERT")
+4. Presiona Enter
+5. El código se inserta automáticamente
+```
+
+### 2️⃣ Analizar SQL (`Ctrl+Alt+A`)
+```
+1. Abre archivo con SQL (dentro de código o .sql)
+2. Presiona Ctrl+Alt+A
+3. Se muestran errores en:
+   - Panel Problems (abajo)
+   - QuickPick (selecciona para detalles)
+4. Selecciona un error para ver sugerencia
+```
+
+### 3️⃣ Formatear SQL (`Ctrl+Alt+F`)
+```
+1. Selecciona consulta SQL (o todo el archivo)
+2. Presiona Ctrl+Alt+F
+3. La consulta se formatea automáticamente
+```
 
 ### Ejemplos
 
-#### SQL
-```sql
-SELECT * FROM users WHERE active = true ORDER BY created_at DESC LIMIT 10;
+#### 📖 SQL - Selección Avanzada
+```bash
+✏️ Atajo: Ctrl+Alt+S
+🔍 Busca: "SELECT JOIN"
 ```
 
-#### Java
+Resultado:
+```sql
+SELECT a.*, b.*
+FROM tabla1 a
+LEFT JOIN tabla2 b ON a.id = b.id
+WHERE a.estado = 'activo'
+ORDER BY a.fecha DESC;
+```
+
+#### ☕ Java - CRUD Completo
+```bash
+✏️ Atajo: Ctrl+Alt+S
+🔍 Busca: "INSERT"
+📍 Archivo: Main.java
+```
+
+Resultado:
 ```java
-public List<User> getAllUsers() throws SQLException {
-    // Código JDBC completo generado automáticamente
+public static void insertUser(User user) throws SQLException {
+    String sql = "INSERT INTO users (name, email) VALUES (?, ?)";
+    
+    try (Connection conn = DatabaseConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setString(1, user.getName());
+        ps.setString(2, user.getEmail());
+        ps.executeUpdate();
+    }
 }
 ```
 
-#### Python
-```python
-cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-resultado = cursor.fetchone()
+#### 🐍 Python - Transacción
+```bash
+✏️ Atajo: Ctrl+Alt+S
+🔍 Busca: "transaction"
 ```
+
+Resultado:
+```python
+def transfer_money(from_id, to_id, amount):
+    conn = mysql.connector.connect(**config)
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("UPDATE accounts SET balance = balance - %s WHERE id = %s", 
+                      (amount, from_id))
+        cursor.execute("UPDATE accounts SET balance = balance + %s WHERE id = %s", 
+                      (amount, to_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+```
+
+#### 📜 JavaScript - Async/Await
+```bash
+✏️ Atajo: Ctrl+Alt+S
+🔍 Busca: "async SELECT"
+```
+
+Resultado:
+```javascript
+async function getUserById(userId) {
+    try {
+        const [rows] = await pool.query(
+            "SELECT * FROM users WHERE id = ?", 
+            [userId]
+        );
+        return rows[0] || null;
+    } catch (error) {
+        console.error("Database error:", error);
+        throw error;
+    }
+}
+```
+
+---
+
+## 🔍 Ejemplos del Analizador SQL
+
+### Detectar Errores
+
+```bash
+✏️ Archivo: queries.sql
+📝 Contenido:
+    UPDATE users SET name = 'John'
+    ❌ Falta WHERE clause (peligroso!)
+
+⌨️ Atajo: Ctrl+Alt+A
+🎯 Resultado:
+   ✗ UPDATE/DELETE SIN WHERE
+   Detectado: "Línea 1 - UPDATE sin WHERE"
+   💡 Sugerencia: "Añade WHERE para evitar actualizar todos los registros"
+   
+✔️ Se muestra en:
+   - Panel Problems
+   - QuickPick interactivo
+   - Output Channel "SQL Helper"
+```
+
+### Detectar en Java
+
+```java
+// queries.java
+String sql = "INSERT INTO users (name) VALUES ('John')  // ❌ Falta ;
+
+⌨️ Atajo: Ctrl+Alt+A
+🎯 Resultado:
+   ✗ FALTA PUNTO Y COMA
+   Detectado: "Línea 1"
+   💡 Sugerencia: "Añade ; al final de la sentencia SQL"
+```
+
+### Formatear Consulta
+
+```bash
+✏️ Contenido original:
+SELECT a.id,a.name,b.email FROM users a INNER JOIN profiles b ON a.id=b.user_id WHERE a.status='active' ORDER BY a.created_at DESC LIMIT 10
+
+⌨️ Atajo: Ctrl+Alt+F
+🎯 Resultado formateado:
+SELECT a.id, a.name, b.email
+FROM users a
+INNER JOIN profiles b ON a.id = b.user_id
+WHERE a.status = 'active'
+ORDER BY a.created_at DESC
+LIMIT 10
+```
+
+---
 
 #### JavaScript
 ```javascript
