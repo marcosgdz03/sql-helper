@@ -12,6 +12,7 @@ import {
     logInfo,
     logError 
 } from './utils/helpers';
+import { MySqlHelper, formatSqlQuery } from './utils/mySqlHelper';
 
 const EXTENSION_NAME = 'SQL Helper';
 
@@ -63,6 +64,57 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(disposable);
+
+    // Comando para analizar errores SQL
+    const analyzeSqlCommand = vscode.commands.registerCommand('sql-helper.analyzeSql', async () => {
+        try {
+            const editor = getActiveEditor();
+            if (!editor) {
+                return;
+            }
+
+            // Verificar que sea un archivo compatible (SQL, Java, JS, Python)
+            const langId = editor.document.languageId;
+            if (!['sql', 'java', 'javascript', 'typescript', 'python'].includes(langId)) {
+                showError('Este comando funciona con: SQL, Java, JavaScript, TypeScript y Python');
+                return;
+            }
+
+            logInfo('Analizando SQL para errores...');
+            await MySqlHelper.analyzeSql(editor);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            logError(`Error analizando SQL: ${errorMessage}`);
+            showError('Error al analizar SQL');
+        }
+    });
+
+    // Comando para formatear SQL
+    const formatSqlCommand = vscode.commands.registerCommand('sql-helper.formatSql', async () => {
+        try {
+            const editor = getActiveEditor();
+            if (!editor) {
+                return;
+            }
+
+            // Verificar que sea un archivo compatible (SQL, Java, JS, Python)
+            const langId = editor.document.languageId;
+            if (!['sql', 'java', 'javascript', 'typescript', 'python'].includes(langId)) {
+                showError('Este comando funciona con: SQL, Java, JavaScript, TypeScript y Python');
+                return;
+            }
+
+            logInfo('Formateando SQL...');
+            await formatSqlQuery(editor);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            logError(`Error formateando SQL: ${errorMessage}`);
+            showError('Error al formatear SQL');
+        }
+    });
+
+    context.subscriptions.push(analyzeSqlCommand);
+    context.subscriptions.push(formatSqlCommand);
 }
 
 export function deactivate() {
