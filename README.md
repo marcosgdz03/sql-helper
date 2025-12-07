@@ -1,5 +1,7 @@
 # 🗄️ SQL Helper
 
+[![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/marcosgdz03.sql-helper)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history) [![Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/marcosgdz03.sql-helper)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history) [![Marketplace Rating](https://img.shields.io/visual-studio-marketplace/rating/marcosgdz03.sql-helper?label=rating)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#review-details) [![GitHub stars](https://img.shields.io/github/stars/marcosgdz03/sql-helper?style=social)](https://github.com/marcosgdz03/sql-helper/stargazers) [![License](https://img.shields.io/github/license/marcosgdz03/sql-helper)](./LICENSE.md)
+
 **SQL Helper** es una extensión avanzada para **Visual Studio Code** que acelera el desarrollo con bases de datos proporcionando:
 
 1. **70+ Snippets profesionales** para SQL, Java JDBC, Python y JavaScript/TypeScript
@@ -91,6 +93,29 @@ Genera código **listo para producción** en segundos, desde consultas SQL compl
     [Instalar SQL Helper en Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history)
 
     (enlace directo al Marketplace)
+
+---
+
+## 📣 Promote & Share
+
+Help others discover the extension — a few quick ways to increase visibility:
+
+- ⭐ Star the repo: `https://github.com/marcosgdz03/sql-helper`
+- Share the Marketplace link: `https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper`
+- Tweet / Mastodon post (example):
+
+```
+I just started using SQL Helper for VS Code — 70+ SQL snippets, SQL analysis and formatting built-in. Install: https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper
+#vscode #sql #developer
+```
+
+- Add the badge to your README:
+
+```
+[![SQL Helper in VS Marketplace](https://img.shields.io/visual-studio-marketplace/i/marcosgdz03.sql-helper)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper)
+```
+
+If you'd like, I can generate social images (Twitter card/GitHub social) or a short animated demo GIF to include in the README.
 
 ### Desde VSIX (desarrollo)
 
