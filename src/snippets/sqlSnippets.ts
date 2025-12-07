@@ -2,12 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { logInfo, logError } from '../utils/helpers';
-
-interface SnippetItem {
-    label: string;
-    snippet: string;
-    description?: string;
-}
+import { SnippetItem } from '../types';
 
 export async function showSqlSnippets(editor: vscode.TextEditor) {
     const sqlItems: SnippetItem[] = [
@@ -58,7 +53,7 @@ export async function showSqlSnippets(editor: vscode.TextEditor) {
     const pick = await vscode.window.showQuickPick(
         sqlItems.map((i) => ({
             label: i.label,
-            detail: i.description || i.snippet.substring(0, 40) + '...',
+            detail: i.description || i.snippet.substring(0, 60) + '...',
             snippet: i.snippet
         })),
         { placeHolder: 'Selecciona un snippet SQL', matchOnDetail: true }
@@ -108,10 +103,10 @@ export async function showSqlSnippets(editor: vscode.TextEditor) {
     // Insertar snippet
     try {
         await editor.insertSnippet(new vscode.SnippetString(pick.snippet));
-        logInfo(`Snippet insertado: ${pick.label}`);
+        logInfo(`Snippet SQL insertado: ${pick.label}`);
     } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        logError(`Error insertan snippet: ${errorMsg}`);
+        logError(`Error insertando snippet: ${errorMsg}`);
         vscode.window.showErrorMessage(`Error: ${errorMsg}`);
     }
 }
