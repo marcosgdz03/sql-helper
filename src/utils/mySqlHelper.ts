@@ -11,6 +11,9 @@ interface SqlError {
     line?: number;
 }
 
+// DiagnosticCollection para mostrar errores en el panel Problems
+let diagnosticCollection: vscode.DiagnosticCollection | null = null;
+
 /**
  * Analizador de sintaxis SQL para MySQL, PostgreSQL
  * Funciona en archivos .sql, .java, .js, .python
@@ -41,10 +44,15 @@ export class MySqlHelper {
         if (errors.length === 0) {
             vscode.window.showInformationMessage('✅ No se detectaron errores SQL comunes');
             logInfo('Análisis SQL: sin errores detectados');
+            // Limpiar diagnosticos previos
+            this.clearDiagnostics(document.uri);
             return;
         }
 
-        // Mostrar errores en una ventana rápida
+        // Mostrar errores en el panel Problems (Diagnostics)
+        this.publishDiagnostics(document, errors);
+
+        // También mostrar errores en una ventana rápida
         const errorItems = errors.map((err, idx) => ({
             label: `$(error) ${err.type}`,
             detail: err.description,
@@ -263,6 +271,48 @@ ${error.suggestion}
         });
 
         return fixed !== text ? fixed : null;
+    }
+
+    /**
+     * Publica los errores en el panel Problems (Diagnostics)
+     */
+    private static publishDiagnostics(document: vscode.TextDocument, errors: SqlError[]): void {
+        // Inicializar DiagnosticCollection si no existe
+        if (!diagnosticCollection) {
+            diagnosticCollection = vscode.languages.createDiagnosticCollection('sql-helper');
+        }
+
+        const diagnostics: vscode.Diagnostic[] = errors.map(error => {
+            // Encontrar la línea del error (si se especifica) o usar línea 0
+            const lineNum = (error.line ?? 1) - 1;
+            const line = document.lineAt(Math.min(lineNum, document.lineCount - 1));
+            const range = new vscode.Range(
+                new vscode.Position(line.lineNumber, 0),
+                new vscode.Position(line.lineNumber, line.text.length)
+            );
+
+            const diagnostic = new vscode.Diagnostic(
+                range,
+                `[SQL] ${error.type}: ${error.description}`,
+                vscode.DiagnosticSeverity.Error
+            );
+            diagnostic.code = 'sql-helper';
+            diagnostic.source = 'SQL Helper';
+
+            return diagnostic;
+        });
+
+        diagnosticCollection.set(document.uri, diagnostics);
+        logInfo(`Publicados ${diagnostics.length} errores SQL en el panel Problems`);
+    }
+
+    /**
+     * Limpia los diagnosticos para un archivo
+     */
+    private static clearDiagnostics(uri: vscode.Uri): void {
+        if (diagnosticCollection) {
+            diagnosticCollection.delete(uri);
+        }
     }
 }
 
