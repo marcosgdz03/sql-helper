@@ -1,3 +1,6 @@
+4. **Contribuir**: ¿Idea para un nuevo snippet? Abre un [GitHub Issue](https://github.com/marcosgdz03/sql-helper/issues) o envía un Pull Request en el repositorio.
+
+**¡Disfruta codificando más rápido con SQL Helper! 🚀**
 # Quick Start - SQL Helper
 
 ## ⚡ Inicio Rápido (3 Funciones Principales)
@@ -118,6 +121,14 @@ LIMIT 10
 | Comando | Shortcut | Uso |
 |---------|----------|-----|
 | **Insertar Snippet** | `Ctrl+Alt+S` | Abre menú de snippets |
+| **Instalar desde Marketplace** | N/A | Visita el enlace directo |
+
+## 📥 Instalar desde Marketplace
+
+Puedes instalar directamente desde el Marketplace:
+
+[Instalar SQL Helper en Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history)
+
 | **Analizar SQL** | `Ctrl+Alt+A` | Detecta errores SQL |
 | **Formatear SQL** | `Ctrl+Alt+F` | Reformatea consulta |
 
@@ -302,11 +313,10 @@ Para cambiar el atajo `Ctrl+Alt+S`:
 ---
 
 ## 📚 Más Información
-
 - **README completo**: `README.md` - Documentación exhaustiva
-- **Guía de contribución**: `CONTRIBUTING.md` - Cómo agregar snippets
+- **FEATURES**: `FEATURES.md` - Listado de snippets
 - **Changelog**: `CHANGELOG.md` - Histórico de cambios
-- **Publicación**: `PUBLISHING.md` - Para maintainers
+- **Seguridad**: `SECURITY.md` - Política de seguridad
 
 ---
 

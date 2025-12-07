@@ -479,6 +479,12 @@ O abre un [GitHub Issue](https://github.com/marcosgdz03/sql-helper/issues) con e
 - **SECURITY.md**: Política de seguridad
 - **INTEGRATION.md**: Para desarrolladores
 - **CHANGELOG.md**: Historial de cambios
+ - **README.md**: Guía general
+ - **QUICKSTART.md**: Inicio rápido
+ - **FEATURES.md**: Documentación detallada
+ - **CHANGELOG.md**: Historial de cambios
+ - **SECURITY.md**: Política de seguridad
+ - Para contribuir o reportar mejoras, abre un [GitHub Issue](https://github.com/marcosgdz03/sql-helper/issues) o envía un Pull Request.
 
 ### P: ¿Dónde reporto problemas de seguridad?
 **R:** 

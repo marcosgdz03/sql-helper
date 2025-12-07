@@ -86,7 +86,11 @@ Genera código **listo para producción** en segundos, desde consultas SQL compl
 1. Abre **VS Code**
 2. Ve a Extensiones (`Ctrl+Shift+X`)
 3. Busca **SQL Helper**
-4. Haz clic en **Instalar**
+4. Haz clic en **Instalar** o visita directamente:
+
+    [Instalar SQL Helper en Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history)
+
+    (enlace directo al Marketplace)
 
 ### Desde VSIX (desarrollo)
 
