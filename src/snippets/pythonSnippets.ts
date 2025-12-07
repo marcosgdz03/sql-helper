@@ -7,7 +7,7 @@ export async function showPythonSnippets(editor: vscode.TextEditor) {
         {
             label: 'Crear fichero conexión SQLite',
             snippet:
-`import sqlite3
+                `import sqlite3
 
 def get_connection():
     conn = sqlite3.connect("\${1:database}.db")
@@ -16,7 +16,7 @@ def get_connection():
         {
             label: 'Crear fichero conexión PostgreSQL',
             snippet:
-`import psycopg2
+                `import psycopg2
 
 def get_connection():
     conn = psycopg2.connect(
@@ -30,7 +30,7 @@ def get_connection():
         {
             label: 'Crear fichero conexión MySQL',
             snippet:
-`import mysql.connector
+                `import mysql.connector
 
 def get_connection():
     conn = mysql.connector.connect(
@@ -44,7 +44,7 @@ def get_connection():
         {
             label: 'Script init.sql',
             snippet:
-`-- Script de inicialización de base de datos
+                `-- Script de inicialización de base de datos
 CREATE TABLE IF NOT EXISTS ejemplo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL
@@ -53,13 +53,13 @@ CREATE TABLE IF NOT EXISTS ejemplo (
         {
             label: 'Script seed.sql',
             snippet:
-`-- Datos iniciales
+                `-- Datos iniciales
 INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`
         },
         {
             label: 'Clase DAO Python',
             snippet:
-`class \${1:Entidad}DAO:
+                `class \${1:Entidad}DAO:
     def __init__(self, conn):
         self.conn = conn
         self.cursor = conn.cursor()
@@ -78,7 +78,7 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`
         {
             label: 'Context manager + manejo de errores',
             snippet:
-`try:
+                `try:
     with get_connection() as conn:
         cursor = conn.cursor()
         # ejecutar consultas
@@ -88,7 +88,7 @@ except Exception as e:
         {
             label: 'Logging básico',
             snippet:
-`import logging
+                `import logging
 
 logging.basicConfig(level=logging.INFO)
 logging.info("Mensaje informativo")
@@ -97,7 +97,7 @@ logging.error("Mensaje de error")`
         {
             label: 'SELECT simple',
             snippet:
-`cursor.execute("SELECT * FROM \${1:tabla}")
+                `cursor.execute("SELECT * FROM \${1:tabla}")
 rows = cursor.fetchall()
 for row in rows:
     print(row)`
@@ -105,7 +105,7 @@ for row in rows:
         {
             label: 'INSERT simple',
             snippet:
-`cursor.execute(
+                `cursor.execute(
     "INSERT INTO \${1:tabla} (\${2:col1}, \${3:col2}) VALUES (?, ?)",
     (\${4:val1}, \${5:val2})
 )
@@ -114,7 +114,7 @@ conn.commit()`
         {
             label: 'UPDATE simple',
             snippet:
-`cursor.execute(
+                `cursor.execute(
     "UPDATE \${1:tabla} SET \${2:columna} = ? WHERE id = ?",
     (\${3:nuevoValor}, \${4:id})
 )
@@ -123,7 +123,7 @@ conn.commit()`
         {
             label: 'DELETE simple',
             snippet:
-`cursor.execute(
+                `cursor.execute(
     "DELETE FROM \${1:tabla} WHERE id = ?",
     (\${2:id},)
 )

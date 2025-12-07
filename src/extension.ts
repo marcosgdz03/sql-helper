@@ -3,52 +3,68 @@ import { showSqlSnippets } from './snippets/sqlSnippets';
 import { showJavaSnippets } from './snippets/javaSnippets';
 import { showPythonSnippets } from './snippets/pythonSnippets';
 import { showJsSnippets } from './snippets/jsSnippets';
-import { getActiveEditor, detectLanguage, pickSnippetType, showError } from './utils/helpers';
+import { 
+    getActiveEditor, 
+    detectLanguage, 
+    pickSnippetType, 
+    showError, 
+    showInfo,
+    logInfo,
+    logError 
+} from './utils/helpers';
+
+const EXTENSION_NAME = 'SQL Helper';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('SQL Helper activado');
+    logInfo(`${EXTENSION_NAME} activado correctamente`);
 
     const disposable = vscode.commands.registerCommand('sql-helper.insertSnippet', async () => {
         try {
-            const editor = vscode.window.activeTextEditor;
+            // Obtener editor activo
+            const editor = getActiveEditor();
             if (!editor) {
-                vscode.window.showInformationMessage('Abre un archivo .java, .sql, .py o .js para usar esta extensión');
                 return;
             }
 
-            const language = editor.document.languageId;
-            let mode: 'sql' | 'java' | 'python' | 'javascript' | undefined;
+            // Detectar lenguaje automáticamente
+            let mode = detectLanguage(editor);
 
-            if (language === 'sql') { mode = 'sql'; }
-            else if (language === 'java') { mode = 'java'; }
-            else if (language === 'python') { mode = 'python'; }
-            else if (language === 'javascript' || language === 'typescript') { mode = 'javascript'; }
-            else {
-                const pick = await vscode.window.showQuickPick(
-                    [
-                        { label: 'Snippets SQL', mode: 'sql' as const },
-                        { label: 'Métodos Java JDBC', mode: 'java' as const },
-                        { label: 'Snippets Python (DB)', mode: 'python' as const },
-                        { label: 'Snippets JavaScript (DB)', mode: 'javascript' as const }
-                    ],
-                    { placeHolder: 'Selecciona el tipo de snippet' }
-                );
-                if (!pick) { return; }
-                mode = pick.mode;
+            // Si no se detecta, preguntar al usuario
+            if (!mode) {
+                mode = await pickSnippetType();
+                if (!mode) {
+                    return;
+                }
             }
 
-            if (mode === 'sql') { await showSqlSnippets(editor); }
-            else if (mode === 'java') { await showJavaSnippets(editor); }
-            else if (mode === 'python') { await showPythonSnippets(editor); }
-            else if (mode === 'javascript') { await showJsSnippets(editor); }
+            logInfo(`Modo seleccionado: ${mode}`);
+
+            // Mostrar snippets según el lenguaje
+            switch (mode) {
+                case 'sql':
+                    await showSqlSnippets(editor);
+                    break;
+                case 'java':
+                    await showJavaSnippets(editor);
+                    break;
+                case 'python':
+                    await showPythonSnippets(editor);
+                    break;
+                case 'javascript':
+                    await showJsSnippets(editor);
+                    break;
+            }
 
         } catch (err) {
-            console.error('Error en la extensión:', err);
-            vscode.window.showErrorMessage('Error en SQL Helper');
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            logError(`Error en ${EXTENSION_NAME}: ${errorMessage}`);
+            showError(`Error inesperado. Revisa la consola para más detalles.`);
         }
     });
 
     context.subscriptions.push(disposable);
 }
 
-export function deactivate() {}
+export function deactivate() {
+    logInfo(`${EXTENSION_NAME} desactivado`);
+}

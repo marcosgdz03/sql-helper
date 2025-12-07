@@ -7,7 +7,7 @@ export async function showJsSnippets(editor: vscode.TextEditor) {
         {
             label: 'Crear fichero conexión MySQL',
             snippet:
-`import mysql from "mysql2/promise";
+                `import mysql from "mysql2/promise";
 
 export const pool = mysql.createPool({
     host: "\${1:localhost}",
@@ -19,7 +19,7 @@ export const pool = mysql.createPool({
         {
             label: 'Crear fichero conexión PostgreSQL',
             snippet:
-`import { Pool } from "pg";
+                `import { Pool } from "pg";
 
 export const pool = new Pool({
     host: "\${1:localhost}",
@@ -32,7 +32,7 @@ export const pool = new Pool({
         {
             label: 'Crear fichero Sequelize',
             snippet:
-`import { Sequelize } from "sequelize";
+                `import { Sequelize } from "sequelize";
 
 export const sequelize = new Sequelize("\${1:database}", "\${2:user}", "\${3:password}", {
     host: "\${4:localhost}",
@@ -42,7 +42,7 @@ export const sequelize = new Sequelize("\${1:database}", "\${2:user}", "\${3:pas
         {
             label: 'Servicio DB con CRUD',
             snippet:
-`import { pool } from "./dbConnection";
+                `import { pool } from "./dbConnection";
 
 export class \${1:Entidad}Repository {
     async getAll() {
@@ -76,7 +76,7 @@ export class \${1:Entidad}Repository {
         {
             label: 'Script init.sql',
             snippet:
-`-- Script de inicialización de base de datos
+                `-- Script de inicialización de base de datos
 CREATE TABLE IF NOT EXISTS ejemplo (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS ejemplo (
         {
             label: 'Script seed.js',
             snippet:
-`import { pool } from "./dbConnection";
+                `import { pool } from "./dbConnection";
 
 async function seed() {
     await pool.execute("INSERT INTO ejemplo (nombre) VALUES (?)", ["dato1"]);
@@ -98,7 +98,7 @@ seed();`
         {
             label: 'Transacción MySQL',
             snippet:
-`const conn = await pool.getConnection();
+                `const conn = await pool.getConnection();
 try {
     await conn.beginTransaction();
     await conn.execute("INSERT INTO \${1:tabla} (\${2:columna}) VALUES (?)", [\${3:valor}]);
@@ -113,7 +113,7 @@ try {
         {
             label: 'JOIN complejo',
             snippet:
-`const [rows] = await pool.query(\`
+                `const [rows] = await pool.query(\`
 SELECT a.*, b.\${1:columna}
 FROM \${2:tablaA} a
 JOIN \${3:tablaB} b ON a.\${4:id} = b.\${5:id}

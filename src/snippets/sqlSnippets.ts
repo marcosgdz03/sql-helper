@@ -1,124 +1,88 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { logInfo, logError } from '../utils/helpers';
+
+interface SnippetItem {
+    label: string;
+    snippet: string;
+    description?: string;
+}
 
 export async function showSqlSnippets(editor: vscode.TextEditor) {
-    const sqlItems = [
-        { label: 'SELECT', snippet: 'SELECT * FROM ${1:tabla};' },
-        { label: 'SELECT WHERE', snippet: 'SELECT * FROM ${1:tabla} WHERE ${2:condicion};' },
-        { label: 'INSERT', snippet: 'INSERT INTO ${1:tabla} (${2:col}) VALUES (${3:val});' },
-        {
-            label: 'CREATE TABLE (completo)',
-            snippet:
-`CREATE TABLE \${1:tabla} (
-    \${2:id} INT PRIMARY KEY AUTO_INCREMENT,
-    \${3:nombre} VARCHAR(100) NOT NULL,
-    \${4:activo} BOOLEAN DEFAULT TRUE,
-    \${5:fecha_creacion} TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);`
-        },
-        {
-            label: 'CREATE TABLE si no existe',
-            snippet:
-`CREATE TABLE IF NOT EXISTS \${1:tabla} (
-    \${2:id} INT PRIMARY KEY,
-    \${3:nombre} VARCHAR(50)
-);`
-        },
-        {
-            label: 'CREATE VIEW',
-            snippet:
-`CREATE VIEW \${1:vista} AS
-SELECT \${2:columnas}
-FROM \${3:tabla}
-WHERE \${4:condicion};`
-        },
-        {
-            label: 'CREATE TRIGGER',
-            snippet:
-`CREATE TRIGGER \${1:trigger_nombre}
-AFTER INSERT ON \${2:tabla}
-FOR EACH ROW
-BEGIN
-    -- acciones
-END;`
-        },
-        {
-            label: 'CREATE STORED PROCEDURE',
-            snippet:
-`DELIMITER //
-CREATE PROCEDURE \${1:proc_nombre}()
-BEGIN
-    -- instrucciones
-END //
-DELIMITER ;`
-        },
-        { label: 'ALTER TABLE - ADD COLUMN', snippet: 'ALTER TABLE ${1:tabla} ADD COLUMN ${2:nueva_columna} ${3:TIPO};' },
-        { label: 'ALTER TABLE - DROP COLUMN', snippet: 'ALTER TABLE ${1:tabla} DROP COLUMN ${2:columna};' },
-        { label: 'CREATE INDEX', snippet: 'CREATE INDEX ${1:idx_nombre} ON ${2:tabla} (${3:columna});' },
-        { label: 'CREATE UNIQUE INDEX', snippet: 'CREATE UNIQUE INDEX ${1:idx_nombre} ON ${2:tabla} (${3:columna});' },
-        {
-            label: 'INSERT MULTIPLE VALUES',
-            snippet:
-`INSERT INTO \${1:tabla} (\${2:col1}, \${3:col2})
-VALUES
-(\${4:val1}, \${5:val2}),
-(\${6:val1}, \${7:val2}),
-(\${8:val1}, \${9:val2});`
-        },
-        {
-            label: 'Crear fichero create_tables.sql',
-            snippet:
-`-- create_tables.sql
-CREATE TABLE IF NOT EXISTS ejemplo (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL
-);`
-        },
-        {
-            label: 'Crear fichero seed_data.sql',
-            snippet:
-`-- seed_data.sql
-INSERT INTO ejemplo (nombre) VALUES ('dato1');
-INSERT INTO ejemplo (nombre) VALUES ('dato2');`
-        },
-        {
-            label: 'Backup base de datos',
-            snippet:
-`-- Backup MySQL
-mysqldump -u \${1:usuario} -p \${2:database} > backup.sql`
-        },
-        {
-            label: 'Restaurar base de datos',
-            snippet:
-`-- Restore MySQL
-mysql -u \${1:usuario} -p \${2:database} < backup.sql`
-        }
+    const sqlItems: SnippetItem[] = [
+        // ========== SELECT ==========
+        { label: '📖 SELECT', snippet: 'SELECT * FROM ${1:tabla};', description: 'Consulta básica' },
+        { label: '📖 SELECT WHERE', snippet: 'SELECT * FROM ${1:tabla} WHERE ${2:condicion};', description: 'Con condición' },
+        { label: '📖 SELECT LIMIT', snippet: 'SELECT * FROM ${1:tabla} LIMIT ${2:10};', description: 'Limitar resultados' },
+        { label: '📖 SELECT ORDER BY', snippet: 'SELECT * FROM ${1:tabla} ORDER BY ${2:columna} ${3:ASC|DESC};', description: 'Ordenar' },
+        { label: '📖 SELECT DISTINCT', snippet: 'SELECT DISTINCT ${1:columna} FROM ${2:tabla};', description: 'Valores únicos' },
+
+        // ========== AGGREGATIONS ==========
+        { label: '⚙️ COUNT', snippet: 'SELECT COUNT(*) as cantidad FROM ${1:tabla};', description: 'Contar registros' },
+        { label: '⚙️ SUM', snippet: 'SELECT SUM(${1:columna}) as total FROM ${2:tabla};', description: 'Suma' },
+        { label: '⚙️ AVG', snippet: 'SELECT AVG(${1:columna}) as promedio FROM ${2:tabla};', description: 'Promedio' },
+
+        // ========== INSERT/UPDATE/DELETE ==========
+        { label: '✏️ INSERT', snippet: 'INSERT INTO ${1:tabla} (${2:col}) VALUES (${3:val});', description: 'Insertar registro' },
+        { label: '✏️ UPDATE', snippet: 'UPDATE ${1:tabla} SET ${2:columna} = ${3:valor} WHERE ${4:condicion};', description: 'Actualizar' },
+        { label: '✏️ DELETE', snippet: 'DELETE FROM ${1:tabla} WHERE ${2:condicion};', description: 'Eliminar' },
+
+        // ========== CREATE TABLE ==========
+        { label: '🏗️ CREATE TABLE', snippet: 'CREATE TABLE ${1:tabla} (\n    ${2:id} INT PRIMARY KEY AUTO_INCREMENT,\n    ${3:nombre} VARCHAR(100) NOT NULL\n);', description: 'Tabla estándar' },
+        { label: '🏗️ CREATE TABLE IF NOT', snippet: 'CREATE TABLE IF NOT EXISTS ${1:tabla} (${2:id} INT PRIMARY KEY, ${3:nombre} VARCHAR(50));', description: 'Crear si no existe' },
+
+        // ========== ALTER TABLE ==========
+        { label: '🔧 ALTER ADD COLUMN', snippet: 'ALTER TABLE ${1:tabla} ADD COLUMN ${2:nueva_columna} ${3:TIPO};', description: 'Agregar columna' },
+        { label: '🔧 ALTER DROP COLUMN', snippet: 'ALTER TABLE ${1:tabla} DROP COLUMN ${2:columna};', description: 'Eliminar columna' },
+
+        // ========== INDEXES ==========
+        { label: '🗂️ CREATE INDEX', snippet: 'CREATE INDEX ${1:idx_nombre} ON ${2:tabla} (${3:columna});', description: 'Índice normal' },
+
+        // ========== JOINS & ADVANCED ==========
+        { label: '⭐ LEFT JOIN', snippet: 'SELECT * FROM ${1:tabla1} LEFT JOIN ${2:tabla2} ON ${1:tabla1}.${3:id} = ${2:tabla2}.${4:id};', description: 'Unión izquierda' },
+        { label: '⭐ UNION', snippet: 'SELECT ${1:columna} FROM ${2:tabla1} UNION SELECT ${3:columna} FROM ${4:tabla2};', description: 'Combinar consultas' },
+        { label: '⭐ CASE WHEN', snippet: 'SELECT ${1:columna}, CASE WHEN ${2:condicion} THEN ${3:val1} ELSE ${4:val2} END FROM ${5:tabla};', description: 'Condicional' },
+
+        // ========== FUNCTIONS ==========
+        { label: '🔤 CONCAT', snippet: 'SELECT CONCAT(${1:col1}, \' \', ${2:col2}) FROM ${3:tabla};', description: 'Concatenar strings' },
+        { label: '🔤 UPPER/LOWER', snippet: 'SELECT UPPER(${1:columna}) FROM ${2:tabla};', description: 'Convertir casos' },
+        { label: '📅 NOW()', snippet: 'SELECT NOW() as fecha_actual;', description: 'Fecha actual' },
+        { label: '📅 DATEDIFF', snippet: 'SELECT DATEDIFF(${1:fecha1}, ${2:fecha2}) as diferencia FROM ${3:tabla};', description: 'Diferencia de fechas' },
+
+        // ========== UTILITY ==========
+        { label: '📄 create_tables.sql', snippet: '-- create_tables.sql\nCREATE TABLE IF NOT EXISTS ejemplo (\n    id INT PRIMARY KEY AUTO_INCREMENT,\n    nombre VARCHAR(100) NOT NULL\n);', description: 'Crear archivo SQL' },
+        { label: '📄 seed_data.sql', snippet: '-- seed_data.sql\nINSERT INTO ejemplo (nombre) VALUES (\'dato1\');\nINSERT INTO ejemplo (nombre) VALUES (\'dato2\');', description: 'Datos de prueba' },
     ];
 
     const pick = await vscode.window.showQuickPick(
-        sqlItems.map((i) => ({ label: i.label, detail: i.snippet })),
-        { placeHolder: 'Snippet SQL / Crear ficheros' }
+        sqlItems.map((i) => ({
+            label: i.label,
+            detail: i.description || i.snippet.substring(0, 40) + '...',
+            snippet: i.snippet
+        })),
+        { placeHolder: 'Selecciona un snippet SQL', matchOnDetail: true }
     );
 
     if (!pick) {
+        logInfo('Selección de snippet SQL cancelada');
         return;
     }
 
-    // Ficheros que se crean en el proyecto
-    const filesToCreate = ['Crear fichero create_tables.sql', 'Crear fichero seed_data.sql'];
+    // Ficheros que se crean
+    const filesToCreate = ['📄 create_tables.sql', '📄 seed_data.sql'];
     if (filesToCreate.includes(pick.label)) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
-            vscode.window.showErrorMessage('Abre primero una carpeta de proyecto para crear el fichero.');
+            vscode.window.showErrorMessage('Abre primero una carpeta de proyecto');
             return;
         }
 
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case 'Crear fichero create_tables.sql': { fileName = 'create_tables.sql'; break; }
-            case 'Crear fichero seed_data.sql': { fileName = 'seed_data.sql'; break; }
+            case '📄 create_tables.sql': { fileName = 'create_tables.sql'; break; }
+            case '📄 seed_data.sql': { fileName = 'seed_data.sql'; break; }
         }
 
         const filePath = path.join(folderPath, fileName);
@@ -128,12 +92,26 @@ mysql -u \${1:usuario} -p \${2:database} < backup.sql`
             return;
         }
 
-        fs.writeFileSync(filePath, pick.detail!, 'utf8');
-        const doc = await vscode.workspace.openTextDocument(filePath);
-        await vscode.window.showTextDocument(doc);
+        try {
+            fs.writeFileSync(filePath, pick.snippet, 'utf8');
+            const doc = await vscode.workspace.openTextDocument(filePath);
+            await vscode.window.showTextDocument(doc);
+            logInfo(`Archivo ${fileName} creado`);
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            logError(`Error creando archivo: ${errorMsg}`);
+            vscode.window.showErrorMessage(`Error: ${errorMsg}`);
+        }
         return;
     }
 
-    // Insertar snippet normal en el editor activo
-    await editor.insertSnippet(new vscode.SnippetString(pick.detail!));
+    // Insertar snippet
+    try {
+        await editor.insertSnippet(new vscode.SnippetString(pick.snippet));
+        logInfo(`Snippet insertado: ${pick.label}`);
+    } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        logError(`Error insertan snippet: ${errorMsg}`);
+        vscode.window.showErrorMessage(`Error: ${errorMsg}`);
+    }
 }

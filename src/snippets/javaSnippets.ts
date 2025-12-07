@@ -7,7 +7,7 @@ export async function showJavaSnippets(editor: vscode.TextEditor) {
         {
             label: 'Crear fichero DatabaseConnection',
             snippet:
-`import java.sql.Connection;
+                `import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
@@ -24,7 +24,7 @@ public class DatabaseConnection {
         {
             label: 'Crear fichero BasicQueries',
             snippet:
-`import java.sql.Connection;
+                `import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,7 +38,7 @@ public class BasicQueries {
         {
             label: 'Crear fichero QueryExecutor',
             snippet:
-`import java.sql.Connection;
+                `import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -68,7 +68,7 @@ public class QueryExecutor {
         {
             label: 'Crear fichero init.sql',
             snippet:
-`-- Script de creación de tablas
+                `-- Script de creación de tablas
 CREATE TABLE IF NOT EXISTS ejemplo (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL
@@ -77,13 +77,13 @@ CREATE TABLE IF NOT EXISTS ejemplo (
         {
             label: 'Crear fichero seed.sql',
             snippet:
-`-- Script de inserción de datos iniciales
+                `-- Script de inserción de datos iniciales
 INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`
         },
         {
             label: 'Transacción (commit/rollback)',
             snippet:
-`try (Connection conn = DatabaseConnection.getConnection()) {
+                `try (Connection conn = DatabaseConnection.getConnection()) {
     try {
         conn.setAutoCommit(false);
         // ejecutar consultas
