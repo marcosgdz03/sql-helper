@@ -103,5 +103,3 @@ package-lock.json
 .notes
 test-results.xml
 junit.xml
-
-generatorSnippets.ts
