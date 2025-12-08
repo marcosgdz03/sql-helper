@@ -125,7 +125,88 @@ JOIN \${3:tableB} b ON a.\${4:id} = b.\${5:id}
 WHERE a.\${6:condition} = ?\`, [\${7:value}]);
 console.log(rows);`,
             description: 'Query with JOINs'
+        }, {
+            label: '🏗️ Create GenericRepository',
+            snippet: `import { pool } from "./dbConnection";
+
+export class \${1:Entity}Repository {
+    
+    async findById(id) {
+        try {
+            const [rows] = await pool.query("SELECT * FROM \${2:table} WHERE id = ?", [id]);
+            return rows[0] || null;
+        } catch (err) {
+            console.error("Error in findById:", err);
+            throw err;
         }
+    }
+
+    async findAll() {
+        try {
+            const [rows] = await pool.query("SELECT * FROM \${2:table}");
+            return rows;
+        } catch (err) {
+            console.error("Error in findAll:", err);
+            throw err;
+        }
+    }
+
+    async insert(obj) {
+        try {
+            const [result] = await pool.execute(
+                "INSERT INTO \${2:table} (\${3:columns}) VALUES (\${4:placeholders})",
+                [\${5:values}]
+            );
+            return result.insertId;
+        } catch (err) {
+            console.error("Error in insert:", err);
+            throw err;
+        }
+    }
+
+    async update(id, obj) {
+        try {
+            await pool.execute(
+                "UPDATE \${2:table} SET \${3:setClause} WHERE id = ?",
+                [\${4:values}, id]
+            );
+        } catch (err) {
+            console.error("Error in update:", err);
+            throw err;
+        }
+    }
+
+    async delete(id) {
+        try {
+            await pool.execute(
+                "DELETE FROM \${2:table} WHERE id = ?",
+                [id]
+            );
+        } catch (err) {
+            console.error("Error in delete:", err);
+            throw err;
+        }
+    }
+
+    // Optional transaction example
+    async transactionExample(obj) {
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+            await conn.execute("INSERT INTO \${2:table} (\${3:columns}) VALUES (?)", [obj.\${4:value}]);
+            await conn.commit();
+        } catch (err) {
+            await conn.rollback();
+            console.error("Transaction failed:", err);
+            throw err;
+        } finally {
+            conn.release();
+        }
+    }
+}`,
+            description: 'Generic Repository with findById, findAll, insert, update, delete, transaction and error handling'
+        }
+
     ];
 
     // Mostrar QuickPick completo con detalle completo
@@ -145,10 +226,10 @@ console.log(rows);`,
 
     // Determinar si se va a crear un archivo
     const filesToCreate = [
-        'Create MySQL connection', 
-        'Create PostgreSQL connection', 
-        'Create Sequelize', 
-        'Script init.sql', 
+        'Create MySQL connection',
+        'Create PostgreSQL connection',
+        'Create Sequelize',
+        'Script init.sql',
         'Script seed.js'
     ];
 

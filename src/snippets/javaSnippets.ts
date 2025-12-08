@@ -106,7 +106,104 @@ INSERT INTO example (name) VALUES ('data1'), ('data2');`,
     }
 }`,
             description: 'Transaction handling'
+        }, {
+            label: '🏗️ Create GenericDAO',
+            snippet: `import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class \${1:Entity}DAO<T> {
+
+    private static final Logger LOGGER = Logger.getLogger(\${1:Entity}DAO.class.getName());
+    private final Connection conn;
+
+    public \${1:Entity}DAO(Connection conn) {
+        this.conn = conn;
+    }
+
+    public Optional<T> findById(int id) {
+        String sql = "SELECT * FROM \${2:table} WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                // Mapear ResultSet a objeto T
+                return Optional.of(mapResultSet(rs));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in findById", e);
         }
+        return Optional.empty();
+    }
+
+    public List<T> findAll() {
+        List<T> results = new ArrayList<>();
+        String sql = "SELECT * FROM \${2:table}";
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                results.add(mapResultSet(rs));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in findAll", e);
+        }
+        return results;
+    }
+
+    public boolean insert(T entity) {
+        String sql = "INSERT INTO \${2:table} (\${3:columns}) VALUES (\${4:valuesPlaceholders})";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            bindParams(ps, entity);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in insert", e);
+        }
+        return false;
+    }
+
+    public boolean update(int id, T entity) {
+        String sql = "UPDATE \${2:table} SET \${3:setClause} WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            bindParams(ps, entity);
+            ps.setInt(\${4:paramIndex}, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in update", e);
+        }
+        return false;
+    }
+
+    public boolean delete(int id) {
+        String sql = "DELETE FROM \${2:table} WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in delete", e);
+        }
+        return false;
+    }
+
+    // Métodos auxiliares
+    private T mapResultSet(ResultSet rs) {
+        // TODO: Mapear ResultSet a objeto T
+        return null;
+    }
+
+    private void bindParams(PreparedStatement ps, T entity) throws SQLException {
+        // TODO: Asignar valores de entity a PreparedStatement
+    }
+}`,
+            description: 'Generic DAO with findById, findAll, insert, update, delete, logging',
+            fileName: 'GenericDAO.java'
+        }
+
     ];
 
     const pick = await vscode.window.showQuickPick(

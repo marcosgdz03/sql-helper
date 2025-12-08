@@ -135,7 +135,82 @@ conn.commit()`,
 )
 conn.commit()`,
             description: 'Delete record'
+        },
+        {
+            label: '🏗️ Generic DAO',
+            snippet: `import logging
+
+class \${1:Entity}DAO:
+    def __init__(self, conn):
+        self.conn = conn
+        self.cursor = conn.cursor()
+
+    def find_by_id(self, id):
+        try:
+            self.cursor.execute("SELECT * FROM \${2:table} WHERE id = %s", (id,))
+            return self.cursor.fetchone()
+        except Exception as e:
+            logging.error("Error in find_by_id: %s", e)
+            raise
+
+    def find_all(self):
+        try:
+            self.cursor.execute("SELECT * FROM \${2:table}")
+            return self.cursor.fetchall()
+        except Exception as e:
+            logging.error("Error in find_all: %s", e)
+            raise
+
+    def insert(self, obj):
+        try:
+            self.cursor.execute(
+                "INSERT INTO \${2:table} (\${3:columns}) VALUES (\${4:placeholders})",
+                (\${5:values},)
+            )
+            self.conn.commit()
+            return self.cursor.lastrowid
+        except Exception as e:
+            self.conn.rollback()
+            logging.error("Error in insert: %s", e)
+            raise
+
+    def update(self, id, obj):
+        try:
+            self.cursor.execute(
+                "UPDATE \${2:table} SET \${3:set_clause} WHERE id = %s",
+                (\${4:values}, id)
+            )
+            self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            logging.error("Error in update: %s", e)
+            raise
+
+    def delete(self, id):
+        try:
+            self.cursor.execute(
+                "DELETE FROM \${2:table} WHERE id = %s",
+                (id,)
+            )
+            self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            logging.error("Error in delete: %s", e)
+            raise
+
+    # Optional transaction example
+    def transaction_example(self, obj):
+        try:
+            self.conn.begin()
+            self.cursor.execute("INSERT INTO \${2:table} (\${3:columns}) VALUES (%s)", (obj.\${4:value},))
+            self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            logging.error("Transaction failed: %s", e)
+            raise`,
+            description: 'Generic DAO with find_by_id, find_all, insert, update, delete, transaction and error handling'
         }
+
     ];
 
     // Mostrar QuickPick con detalle completo
