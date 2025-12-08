@@ -110,7 +110,7 @@ Displays errors in:
 4. Click Install or visit:
 
 👉 SQL Helper on Visual Studio Marketplace
-    [Instalar SQL Helper en Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history)
+    [Install SQL Helper in Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history)
 
 ---
 
