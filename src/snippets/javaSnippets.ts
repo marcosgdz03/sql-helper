@@ -7,6 +7,7 @@ interface SnippetItem {
     label: string;
     snippet: string;
     description?: string;
+    fileName?: string; // Nombre del archivo opcional
 }
 
 export async function showJavaSnippets(editor: vscode.TextEditor) {
@@ -26,7 +27,8 @@ public class DatabaseConnection {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }`,
-            description: 'JDBC connection class'
+            description: 'JDBC connection class',
+            fileName: 'DatabaseConnection.java'
         },
         {
             label: '📝 Create BasicQueries',
@@ -40,7 +42,8 @@ import java.util.List;
 public class BasicQueries {
     // Basic CRUD methods here...
 }`,
-            description: 'Base class for CRUD queries'
+            description: 'Base class for CRUD queries',
+            fileName: 'BasicQueries.java'
         },
         {
             label: '⚙️ Create QueryExecutor',
@@ -70,7 +73,8 @@ public class QueryExecutor {
         return ps.executeQuery();
     }
 }`,
-            description: 'Parameterized query executor'
+            description: 'Parameterized query executor',
+            fileName: 'QueryExecutor.java'
         },
         {
             label: '📄 Create init.sql',
@@ -79,13 +83,15 @@ CREATE TABLE IF NOT EXISTS example (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL
 );`,
-            description: 'Initialization script'
+            description: 'Initialization script',
+            fileName: 'init.sql'
         },
         {
             label: '🌱 Create seed.sql',
             snippet: `-- Seed insertion script
 INSERT INTO example (name) VALUES ('data1'), ('data2');`,
-            description: 'Seed data'
+            description: 'Seed data',
+            fileName: 'seed.sql'
         },
         {
             label: '🔄 Transaction (commit/rollback)',
@@ -107,7 +113,8 @@ INSERT INTO example (name) VALUES ('data1'), ('data2');`,
         javaItems.map((i) => ({
             label: i.label,
             detail: i.description || i.snippet.substring(0, 50) + '...',
-            snippet: i.snippet
+            snippet: i.snippet,
+            fileName: i.fileName
         })),
         { placeHolder: 'JDBC methods / Create files / Transactions' }
     );
@@ -117,73 +124,63 @@ INSERT INTO example (name) VALUES ('data1'), ('data2');`,
         return;
     }
 
-    const filesToCreate = [
-        'DatabaseConnection',
-        'BasicQueries',
-        'QueryExecutor',
-        'init.sql',
-        'seed.sql'
-    ];
-
-    if (filesToCreate.some(f => pick.label.includes(f))) {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            vscode.window.showErrorMessage('Open a project folder first to create the file.');
-            return;
-        }
-
-        const folderPath = workspaceFolders[0].uri.fsPath;
-        let fileName = '';
-        switch (pick.label) {
-            case '🗄️ Create DatabaseConnection': {
-                fileName = 'DatabaseConnection.java';
-                break;
-            }
-            case '📝 Create BasicQueries': {
-                fileName = 'BasicQueries.java';
-                break;
-            }
-            case '⚙️ Create QueryExecutor': {
-                fileName = 'QueryExecutor.java';
-                break;
-            }
-            case '📄 Create init.sql': {
-                fileName = 'init.sql';
-                break;
-            }
-            case '🌱 Create seed.sql': {
-                fileName = 'seed.sql';
-                break;
-            }
-        }
-
-        const filePath = path.join(folderPath, fileName);
-
-        if (fs.existsSync(filePath)) {
-            vscode.window.showWarningMessage(`${fileName} already exists.`);
-            return;
-        }
-
-        try {
-            fs.writeFileSync(filePath, pick.snippet, 'utf8');
-            const doc = await vscode.workspace.openTextDocument(filePath);
-            await vscode.window.showTextDocument(doc);
-            logInfo(`File ${fileName} created`);
-        } catch (err) {
-            const errorMsg = err instanceof Error ? err.message : String(err);
-            logError(`Error creating file: ${errorMsg}`);
-            vscode.window.showErrorMessage(`Error: ${errorMsg}`);
-        }
+    // Si tiene un fileName definido, creamos el archivo
+    if (pick.fileName) {
+        await createFileFromSnippet(pick.fileName, pick.snippet);
         return;
     }
 
-    // Insertar snippet
+    // Insertar snippet directamente en editor
     try {
         await editor.insertSnippet(new vscode.SnippetString(pick.snippet));
         logInfo(`Java snippet inserted: ${pick.label}`);
     } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
         logError(`Error inserting snippet: ${errorMsg}`);
-        vscode.window.showErrorMessage(`Error: ${errorMsg}`);
+        vscode.window.showErrorMessage(`Error inserting snippet: ${errorMsg}`);
     }
 }
+
+async function createFileFromSnippet(fileName: string, content: string) {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+        vscode.window.showErrorMessage('Open a project folder first to create the file.');
+        return;
+    }
+
+    let folderPath: string;
+
+    if (workspaceFolders.length === 1) {
+        folderPath = workspaceFolders[0].uri.fsPath;
+    } else {
+        // Si hay varias carpetas, dejar que el usuario elija
+        const pick = await vscode.window.showQuickPick(
+            workspaceFolders.map(f => ({ label: f.name, path: f.uri.fsPath })),
+            { placeHolder: 'Select the folder to create the file in' }
+        );
+        if (!pick) {
+            vscode.window.showInformationMessage('File creation cancelled.');
+            return;
+        }
+        folderPath = pick.path;
+    }
+
+    const filePath = path.join(folderPath, fileName);
+
+    if (fs.existsSync(filePath)) {
+        vscode.window.showWarningMessage(`${fileName} already exists in ${folderPath}.`);
+        return;
+    }
+
+    try {
+        fs.writeFileSync(filePath, content, 'utf8');
+        const doc = await vscode.workspace.openTextDocument(filePath);
+        await vscode.window.showTextDocument(doc);
+        logInfo(`File ${fileName} created successfully in ${folderPath}`);
+    } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        logError(`Error creating file ${fileName}: ${errorMsg}`);
+        vscode.window.showErrorMessage(`Error creating file: ${errorMsg}`);
+    }
+}
+

@@ -73,7 +73,7 @@ export class \${1:Entity}Repository {
 
     async delete(id) {
         await pool.execute(
-            "DELETE FROM \${2:tabla} WHERE id = ?",
+            "DELETE FROM \${2:table} WHERE id = ?",
             [id]
         );
     }
@@ -119,19 +119,22 @@ try {
         },
         {
             label: '🔍 Complex JOIN',
-            snippet: `const [rows] = await pool.query(` + "`" + `
-SELECT a.*, b.\${1:column}
+            snippet: `const [rows] = await pool.query(\`SELECT a.*, b.\${1:column}
 FROM \${2:tableA} a
 JOIN \${3:tableB} b ON a.\${4:id} = b.\${5:id}
-WHERE a.\${6:condition} = ?
-` + "`" + `, [\${7:value}]);
+WHERE a.\${6:condition} = ?\`, [\${7:value}]);
 console.log(rows);`,
             description: 'Query with JOINs'
         }
     ];
 
+    // Mostrar QuickPick completo con detalle completo
     const pick = await vscode.window.showQuickPick(
-        jsItems.map((i) => ({ label: i.label, detail: i.description || i.snippet.substring(0, 60) + '...', snippet: i.snippet })),
+        jsItems.map((i) => ({
+            label: i.label,
+            detail: i.description || i.snippet,
+            snippet: i.snippet
+        })),
         { placeHolder: 'JavaScript/TypeScript DB snippets / Create files', matchOnDetail: true }
     );
 
@@ -139,9 +142,17 @@ console.log(rows);`,
         logInfo('JS snippet selection cancelled');
         return;
     }
-    const filesToCreate = ['Create MySQL connection', 'Create PostgreSQL connection', 'Create Sequelize', 'Script init.sql', 'Script seed.js'];
 
-    if (filesToCreate.some(f => pick.label.includes(f.split(' ')[0]) || pick.label.includes(f.split(' ')[1] || ''))) {
+    // Determinar si se va a crear un archivo
+    const filesToCreate = [
+        'Create MySQL connection', 
+        'Create PostgreSQL connection', 
+        'Create Sequelize', 
+        'Script init.sql', 
+        'Script seed.js'
+    ];
+
+    if (filesToCreate.some(f => pick.label.includes(f))) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
             vscode.window.showErrorMessage('Open a project folder first to create the file.');
@@ -151,11 +162,11 @@ console.log(rows);`,
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case '🔗 Create MySQL connection': { fileName = 'dbConnection.js'; break; }
-            case '🔗 Create PostgreSQL connection': { fileName = 'pgConnection.js'; break; }
-            case '🧭 Create Sequelize': { fileName = 'sequelize.js'; break; }
-            case '📄 Script init.sql': { fileName = 'init.sql'; break; }
-            case '🌱 Script seed.js': { fileName = 'seed.js'; break; }
+            case '🔗 Create MySQL connection': fileName = 'dbConnection.js'; break;
+            case '🔗 Create PostgreSQL connection': fileName = 'pgConnection.js'; break;
+            case '🧭 Create Sequelize': fileName = 'sequelize.js'; break;
+            case '📄 Script init.sql': fileName = 'init.sql'; break;
+            case '🌱 Script seed.js': fileName = 'seed.js'; break;
             default: fileName = 'snippet.txt';
         }
 
@@ -179,6 +190,7 @@ console.log(rows);`,
         return;
     }
 
+    // Insertar snippet en editor
     try {
         await editor.insertSnippet(new vscode.SnippetString(pick.snippet));
         logInfo(`JS snippet inserted: ${pick.label}`);

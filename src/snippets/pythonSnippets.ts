@@ -138,10 +138,11 @@ conn.commit()`,
         }
     ];
 
+    // Mostrar QuickPick con detalle completo
     const pick = await vscode.window.showQuickPick(
         pyItems.map((i) => ({
             label: i.label,
-            detail: i.description || i.snippet.substring(0, 50) + '...',
+            detail: i.description || i.snippet,
             snippet: i.snippet
         })),
         { placeHolder: 'Python DB snippets / Create files', matchOnDetail: true }
@@ -152,6 +153,7 @@ conn.commit()`,
         return;
     }
 
+    // Determinar si se va a crear un archivo
     const filesToCreate = [
         'SQLite Connection',
         'PostgreSQL Connection',
@@ -170,11 +172,11 @@ conn.commit()`,
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case '📦 SQLite Connection': { fileName = 'sqlite_connection.py'; break; }
-            case '🔵 PostgreSQL Connection': { fileName = 'postgres_connection.py'; break; }
-            case '🔶 MySQL Connection': { fileName = 'mysql_connection.py'; break; }
-            case '📄 Create init.sql': { fileName = 'init.sql'; break; }
-            case '🌱 Create seed.sql': { fileName = 'seed.sql'; break; }
+            case '📦 SQLite Connection': fileName = 'sqlite_connection.py'; break;
+            case '🔵 PostgreSQL Connection': fileName = 'postgres_connection.py'; break;
+            case '🔶 MySQL Connection': fileName = 'mysql_connection.py'; break;
+            case '📄 Create init.sql': fileName = 'init.sql'; break;
+            case '🌱 Create seed.sql': fileName = 'seed.sql'; break;
             default: fileName = 'snippet.py';
         }
 
@@ -198,6 +200,7 @@ conn.commit()`,
         return;
     }
 
+    // Insertar snippet en editor
     try {
         await editor.insertSnippet(new vscode.SnippetString(pick.snippet));
         logInfo(`Python snippet inserted: ${pick.label}`);
@@ -207,4 +210,3 @@ conn.commit()`,
         vscode.window.showErrorMessage(`Error: ${errorMsg}`);
     }
 }
-
