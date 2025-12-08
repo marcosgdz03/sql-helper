@@ -3,44 +3,38 @@ import { showSqlSnippets } from './snippets/sqlSnippets';
 import { showJavaSnippets } from './snippets/javaSnippets';
 import { showPythonSnippets } from './snippets/pythonSnippets';
 import { showJsSnippets } from './snippets/jsSnippets';
-import { 
-    getActiveEditor, 
-    detectLanguage, 
-    pickSnippetType, 
-    showError, 
+import {
+    getActiveEditor,
+    detectLanguage,
+    pickSnippetType,
+    showError,
     showInfo,
     logInfo,
-    logError 
+    logError
 } from './utils/helpers';
-import { MySqlHelper, formatSqlQuery } from './utils/mySqlHelper';
+import { SqlHelper, SqlDialect } from './utils/sqlHelpers';
 
 const EXTENSION_NAME = 'SQL Helper';
 
 export function activate(context: vscode.ExtensionContext) {
     logInfo(`${EXTENSION_NAME} activated`);
 
-    const disposable = vscode.commands.registerCommand('sql-helper.insertSnippet', async () => {
+    // -------------------------------
+    // COMANDO PRINCIPAL: INSERTAR SNIPPET
+    // -------------------------------
+    const insertSnippetCommand = vscode.commands.registerCommand('sql-helper.insertSnippet', async () => {
         try {
-            // Get active editor
             const editor = getActiveEditor();
-            if (!editor) {
-                return;
-            }
+            if (!editor) return;
 
-            // Detect language automatically
             let mode = detectLanguage(editor);
-
-            // If not detected, ask the user
             if (!mode) {
                 mode = await pickSnippetType();
-                if (!mode) {
-                    return;
-                }
+                if (!mode) return;
             }
 
             logInfo(`Selected mode: ${mode}`);
 
-            // Show snippets by language
             switch (mode) {
                 case 'sql':
                     await showSqlSnippets(editor);
@@ -54,8 +48,9 @@ export function activate(context: vscode.ExtensionContext) {
                 case 'javascript':
                     await showJsSnippets(editor);
                     break;
+                default:
+                    showError(`Unsupported language: ${mode}`);
             }
-
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             logError(`Error in ${EXTENSION_NAME}: ${errorMessage}`);
@@ -63,24 +58,28 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    context.subscriptions.push(disposable);
-
-    // Command to analyze SQL issues
+    // -------------------------------
+    // COMANDO: ANALIZAR SQL
+    // -------------------------------
     const analyzeSqlCommand = vscode.commands.registerCommand('sql-helper.analyzeSql', async () => {
         try {
             const editor = getActiveEditor();
-            if (!editor) {
-                return;
-            }
+            if (!editor) return;
 
-            // Verify this is a supported file (SQL, Java, JS, Python)
             const langId = editor.document.languageId;
             if (!['sql', 'java', 'javascript', 'typescript', 'python'].includes(langId)) {
                 showError('This command works with: SQL, Java, JavaScript, TypeScript and Python');
                 return;
             }
-            logInfo('Analyzing SQL for issues...');
-            await MySqlHelper.analyzeSql(editor);
+
+            const choice = await vscode.window.showQuickPick(['MySQL', 'PostgreSQL'], { placeHolder: 'Select SQL dialect to analyze' });
+            if (!choice) return;
+
+            logInfo(`Analyzing SQL for ${choice}...`);
+
+            const dialect: SqlDialect = choice.toLowerCase() as SqlDialect;
+            await SqlHelper.analyzeSql(editor, dialect);
+
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             logError(`Error analyzing SQL: ${errorMessage}`);
@@ -88,22 +87,32 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    // Command to format SQL
+    // -------------------------------
+    // COMANDO: FORMATEAR SQL
+    // -------------------------------
+    // -------------------------------
+    // COMANDO: FORMATEAR SQL
+    // -------------------------------
     const formatSqlCommand = vscode.commands.registerCommand('sql-helper.formatSql', async () => {
         try {
             const editor = getActiveEditor();
-            if (!editor) {
-                return;
-            }
+            if (!editor) return;
 
-            // Verify this is a supported file (SQL, Java, JS, Python)
             const langId = editor.document.languageId;
             if (!['sql', 'java', 'javascript', 'typescript', 'python'].includes(langId)) {
                 showError('This command works with: SQL, Java, JavaScript, TypeScript and Python');
                 return;
             }
-            logInfo('Formatting SQL...');
-            await formatSqlQuery(editor);
+
+            // Pide dialecto antes de formatear
+            const choice = await vscode.window.showQuickPick(['MySQL', 'PostgreSQL'], { placeHolder: 'Select SQL dialect to format' });
+            if (!choice) return;
+
+            logInfo(`Formatting SQL for ${choice}...`);
+
+            const dialect: SqlDialect = choice.toLowerCase() as SqlDialect;
+            await SqlHelper.formatSql(editor, dialect);
+
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             logError(`Error formatting SQL: ${errorMessage}`);
@@ -111,8 +120,45 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    context.subscriptions.push(analyzeSqlCommand);
-    context.subscriptions.push(formatSqlCommand);
+
+    // -------------------------------
+    // COMANDO: AUTO-FIX SQL
+    // -------------------------------
+    const autoFixSqlCommand = vscode.commands.registerCommand('sql-helper.autoFix', async () => {
+        try {
+            const editor = getActiveEditor();
+            if (!editor) return;
+
+            const langId = editor.document.languageId;
+            if (!['sql', 'java', 'javascript', 'typescript', 'python'].includes(langId)) {
+                showError('This command works with: SQL, Java, JavaScript, TypeScript and Python');
+                return;
+            }
+
+            const choice = await vscode.window.showQuickPick(['MySQL', 'PostgreSQL'], { placeHolder: 'Select SQL dialect to auto-fix' });
+            if (!choice) return;
+
+            logInfo(`Applying auto-fix for ${choice}...`);
+
+            const dialect: SqlDialect = choice.toLowerCase() as SqlDialect;
+            await SqlHelper.applyAutoFix(editor, dialect);
+
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            logError(`Error applying auto-fix: ${errorMessage}`);
+            showError('Error applying auto-fix');
+        }
+    });
+
+    // -------------------------------
+    // REGISTRAR COMANDOS
+    // -------------------------------
+    context.subscriptions.push(
+        insertSnippetCommand,
+        analyzeSqlCommand,
+        formatSqlCommand,
+        autoFixSqlCommand
+    );
 }
 
 export function deactivate() {
