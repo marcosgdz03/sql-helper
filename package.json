@@ -1,11 +1,11 @@
 {
   "name": "sql-helper",
   "displayName": "SQL Helper",
-  "description": "Advanced extension with SQL, Java JDBC, Python and JavaScript snippets for databases",
-  "version": "0.1.8",
+  "description": "Advanced extension with SQL, Java JDBC, Python and JavaScript/TypeScript snippets for databases",
+  "version": "0.1.9",
   "publisher": "marcosgdz03",
   "engines": {
-    "vscode": "^1.106.1"
+    "vscode": "^1.106.0"
   },
   "categories": [
     "Programming Languages",
@@ -20,7 +20,8 @@
     "mysql",
     "postgresql",
     "python",
-    "javascript"
+    "javascript",
+    "typescript"
   ],
   "activationEvents": [
     "onLanguage:java",
@@ -44,17 +45,17 @@
       {
         "command": "sql-helper.insertSnippet",
         "title": "SQL Helper: Insert snippet",
-        "description": "Open the snippet selector for SQL, Java, Python or JavaScript"
+        "category": "SQL Helper"
       },
       {
         "command": "sql-helper.analyzeSql",
         "title": "SQL Helper: Analyze SQL",
-        "description": "Detect common issues in SQL queries"
+        "category": "SQL Helper"
       },
       {
         "command": "sql-helper.formatSql",
         "title": "SQL Helper: Format SQL",
-        "description": "Format and improve readability of SQL queries"
+        "category": "SQL Helper"
       }
     ],
     "keybindings": [
@@ -80,17 +81,17 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "lint": "eslint 'src/**/*.{ts,js}'",
+    "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.106.1",
+    "@types/vscode": "^1.106.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
-    "typescript-eslint": "^8.48.1",
-    "eslint": "^9.39.1",
+    "@types/node": "^22.0.0",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
+    "eslint": "^9.39.1",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
     "@vscode/test-electron": "^2.4.1"
   }
 }
