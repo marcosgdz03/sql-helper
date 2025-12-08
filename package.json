@@ -2,7 +2,7 @@
   "name": "sql-helper",
   "displayName": "SQL Helper",
   "description": "Advanced extension with SQL, Java JDBC, Python and JavaScript/TypeScript snippets for databases",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "publisher": "marcosgdz03",
   "engines": {
     "vscode": "^1.106.0"
@@ -21,14 +21,17 @@
     "postgresql",
     "python",
     "javascript",
-    "typescript"
+    "typescript",
+    "generator",
+    "project generator"
   ],
   "activationEvents": [
     "onLanguage:java",
     "onLanguage:sql",
     "onLanguage:python",
     "onLanguage:javascript",
-    "onLanguage:typescript"
+    "onLanguage:typescript",
+    "onCommand:sql-helper.generateProject"
   ],
   "main": "./out/extension.js",
   "repository": {
@@ -56,6 +59,11 @@
         "command": "sql-helper.formatSql",
         "title": "SQL Helper: Format SQL",
         "category": "SQL Helper"
+      },
+      {
+        "command": "sql-helper.generateProject",
+        "title": "SQL Helper: Generate Project",
+        "category": "SQL Helper"
       }
     ],
     "keybindings": [
@@ -73,6 +81,11 @@
         "command": "sql-helper.formatSql",
         "key": "ctrl+alt+f",
         "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == java || resourceLangId == javascript || resourceLangId == typescript || resourceLangId == python)"
+      },
+      {
+        "command": "sql-helper.generateProject",
+        "key": "ctrl+alt+g",
+        "when": "editorTextFocus"
       }
     ]
   },
