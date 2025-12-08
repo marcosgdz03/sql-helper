@@ -12,7 +12,7 @@ interface SnippetItem {
 export async function showJsSnippets(editor: vscode.TextEditor) {
     const jsItems: SnippetItem[] = [
         {
-            label: '🔗 Crear conexión MySQL',
+            label: '🔗 Create MySQL connection',
             snippet: `import mysql from "mysql2/promise";
 
 export const pool = mysql.createPool({
@@ -21,10 +21,10 @@ export const pool = mysql.createPool({
     password: "\${3:password}",
     database: "\${4:database}"
 });`,
-            description: 'Pool mysql2/promise'
+            description: 'mysql2/promise pool'
         },
         {
-            label: '🔗 Crear conexión PostgreSQL',
+            label: '🔗 Create PostgreSQL connection',
             snippet: `import { Pool } from "pg";
 
 export const pool = new Pool({
@@ -34,40 +34,40 @@ export const pool = new Pool({
     database: "\${4:database}",
     port: \${5:5432}
 });`,
-            description: 'Pool pg'
+            description: 'pg pool'
         },
         {
-            label: '🧭 Crear Sequelize',
+            label: '🧭 Create Sequelize',
             snippet: `import { Sequelize } from "sequelize";
 
 export const sequelize = new Sequelize("\${1:database}", "\${2:user}", "\${3:password}", {
     host: "\${4:localhost}",
     dialect: "mysql" // o 'postgres'
 });`,
-            description: 'Instancia Sequelize'
+            description: 'Sequelize instance'
         },
         {
-            label: '⚙️ Servicio DB con CRUD',
+            label: '⚙️ DB Service with CRUD',
             snippet: `import { pool } from "./dbConnection";
 
-export class \${1:Entidad}Repository {
+export class \${1:Entity}Repository {
     async getAll() {
-        const [rows] = await pool.query("SELECT * FROM \${2:tabla}");
+        const [rows] = await pool.query("SELECT * FROM \${2:table}");
         return rows;
     }
 
     async insert(obj) {
         const [result] = await pool.execute(
-            "INSERT INTO \${2:tabla} (\${3:col1}) VALUES (?)",
-            [obj.\${4:campo}]
+            "INSERT INTO \${2:table} (\${3:col1}) VALUES (?)",
+            [obj.\${4:field}]
         );
         return result.insertId;
     }
 
     async update(id, obj) {
         await pool.execute(
-            "UPDATE \${2:tabla} SET \${3:columna} = ? WHERE id = ?",
-            [obj.\${4:valor}, id]
+            "UPDATE \${2:table} SET \${3:column} = ? WHERE id = ?",
+            [obj.\${4:value}, id]
         );
     }
 
@@ -78,36 +78,36 @@ export class \${1:Entidad}Repository {
         );
     }
 }`,
-            description: 'Repositorio con operaciones básicas'
+            description: 'Repository with basic operations'
         },
         {
             label: '📄 Script init.sql',
-            snippet: `-- Script de inicialización de base de datos
-CREATE TABLE IF NOT EXISTS ejemplo (
+            snippet: `-- Database initialization script
+CREATE TABLE IF NOT EXISTS example (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL
 );`,
-            description: 'Crear tablas'
+            description: 'Create tables'
         },
         {
             label: '🌱 Script seed.js',
             snippet: `import { pool } from "./dbConnection";
 
 async function seed() {
-    await pool.execute("INSERT INTO ejemplo (nombre) VALUES (?)", ["dato1"]);
-    await pool.execute("INSERT INTO ejemplo (nombre) VALUES (?)", ["dato2"]);
-    console.log("Seed completado");
+    await pool.execute("INSERT INTO example (name) VALUES (?)", ["data1"]);
+    await pool.execute("INSERT INTO example (name) VALUES (?)", ["data2"]);
+    console.log("Seed completed");
 }
 
 seed();`,
-            description: 'Script de semillas'
+            description: 'Seed script'
         },
         {
-            label: '🔒 Transacción MySQL',
+            label: '🔒 MySQL Transaction',
             snippet: `const conn = await pool.getConnection();
 try {
     await conn.beginTransaction();
-    await conn.execute("INSERT INTO \${1:tabla} (\${2:columna}) VALUES (?)", [\${3:valor}]);
+    await conn.execute("INSERT INTO \${1:table} (\${2:column}) VALUES (?)", [\${3:value}]);
     await conn.commit();
 } catch (err) {
     await conn.rollback();
@@ -115,46 +115,45 @@ try {
 } finally {
     conn.release();
 }`,
-            description: 'Patrón transaccional'
+            description: 'Transactional pattern'
         },
         {
-            label: '🔍 JOIN complejo',
+            label: '🔍 Complex JOIN',
             snippet: `const [rows] = await pool.query(` + "`" + `
-SELECT a.*, b.\${1:columna}
-FROM \${2:tablaA} a
-JOIN \${3:tablaB} b ON a.\${4:id} = b.\${5:id}
-WHERE a.\${6:condicion} = ?
-` + "`" + `, [\${7:valor}]);
+SELECT a.*, b.\${1:column}
+FROM \${2:tableA} a
+JOIN \${3:tableB} b ON a.\${4:id} = b.\${5:id}
+WHERE a.\${6:condition} = ?
+` + "`" + `, [\${7:value}]);
 console.log(rows);`,
-            description: 'Consulta con JOINs'
+            description: 'Query with JOINs'
         }
     ];
 
     const pick = await vscode.window.showQuickPick(
         jsItems.map((i) => ({ label: i.label, detail: i.description || i.snippet.substring(0, 60) + '...', snippet: i.snippet })),
-        { placeHolder: 'Snippet JavaScript/TypeScript DB / Crear ficheros', matchOnDetail: true }
+        { placeHolder: 'JavaScript/TypeScript DB snippets / Create files', matchOnDetail: true }
     );
 
     if (!pick) {
-        logInfo('Selección de snippet JS cancelada');
+        logInfo('JS snippet selection cancelled');
         return;
     }
-
-    const filesToCreate = ['Crear conexión MySQL', 'Crear conexión PostgreSQL', 'Crear Sequelize', 'Script init.sql', 'Script seed.js'];
+    const filesToCreate = ['Create MySQL connection', 'Create PostgreSQL connection', 'Create Sequelize', 'Script init.sql', 'Script seed.js'];
 
     if (filesToCreate.some(f => pick.label.includes(f.split(' ')[0]) || pick.label.includes(f.split(' ')[1] || ''))) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
-            vscode.window.showErrorMessage('Abre primero una carpeta de proyecto para crear el fichero.');
+            vscode.window.showErrorMessage('Open a project folder first to create the file.');
             return;
         }
 
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case '🔗 Crear conexión MySQL': { fileName = 'dbConnection.js'; break; }
-            case '🔗 Crear conexión PostgreSQL': { fileName = 'pgConnection.js'; break; }
-            case '🧭 Crear Sequelize': { fileName = 'sequelize.js'; break; }
+            case '🔗 Create MySQL connection': { fileName = 'dbConnection.js'; break; }
+            case '🔗 Create PostgreSQL connection': { fileName = 'pgConnection.js'; break; }
+            case '🧭 Create Sequelize': { fileName = 'sequelize.js'; break; }
             case '📄 Script init.sql': { fileName = 'init.sql'; break; }
             case '🌱 Script seed.js': { fileName = 'seed.js'; break; }
             default: fileName = 'snippet.txt';
@@ -163,7 +162,7 @@ console.log(rows);`,
         const filePath = path.join(folderPath, fileName);
 
         if (fs.existsSync(filePath)) {
-            vscode.window.showWarningMessage(`${fileName} ya existe.`);
+            vscode.window.showWarningMessage(`${fileName} already exists.`);
             return;
         }
 
@@ -171,10 +170,10 @@ console.log(rows);`,
             fs.writeFileSync(filePath, pick.snippet, 'utf8');
             const doc = await vscode.workspace.openTextDocument(filePath);
             await vscode.window.showTextDocument(doc);
-            logInfo(`Archivo ${fileName} creado`);
+            logInfo(`File ${fileName} created`);
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : String(err);
-            logError(`Error creando archivo: ${errorMsg}`);
+            logError(`Error creating file: ${errorMsg}`);
             vscode.window.showErrorMessage(`Error: ${errorMsg}`);
         }
         return;
@@ -182,10 +181,10 @@ console.log(rows);`,
 
     try {
         await editor.insertSnippet(new vscode.SnippetString(pick.snippet));
-        logInfo(`Snippet JS insertado: ${pick.label}`);
+        logInfo(`JS snippet inserted: ${pick.label}`);
     } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        logError(`Error insertando snippet JS: ${errorMsg}`);
+        logError(`Error inserting JS snippet: ${errorMsg}`);
         vscode.window.showErrorMessage(`Error: ${errorMsg}`);
     }
 }

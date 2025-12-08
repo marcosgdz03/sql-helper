@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { logInfo, logError } from './helpers';
 
 /**
- * Interfaz para errores SQL detectados
+ * Interface for detected SQL errors
  */
 interface SqlError {
     type: string;
@@ -11,17 +11,17 @@ interface SqlError {
     line?: number;
 }
 
-// DiagnosticCollection para mostrar errores en el panel Problems
+// DiagnosticCollection to show issues in the Problems panel
 let diagnosticCollection: vscode.DiagnosticCollection | null = null;
 
 /**
- * Analizador de sintaxis SQL para MySQL, PostgreSQL
- * Funciona en archivos .sql, .java, .js, .python
+ * SQL syntax analyzer for MySQL/PostgreSQL
+ * Works on .sql, .java, .js, .py files
  */
 export class MySqlHelper {
     /**
-     * Analiza el texto seleccionado o el documento completo buscando errores SQL comunes
-     * Extrae strings SQL de código (Java, JavaScript, Python)
+     * Analyzes selected text or the entire document for common SQL issues
+     * Extracts SQL strings from code (Java, JavaScript, Python)
      */
     static async analyzeSql(editor: vscode.TextEditor): Promise<void> {
         const document = editor.document;
@@ -34,16 +34,16 @@ export class MySqlHelper {
         }
 
         if (!text || text.trim().length === 0) {
-            vscode.window.showWarningMessage('No se encontraron consultas SQL en el archivo');
-            logInfo('Análisis SQL: no se encontraron consultas SQL');
+            vscode.window.showWarningMessage('No SQL queries found in the file');
+            logInfo('SQL analysis: no SQL queries found');
             return;
         }
 
         const errors = this.detectErrors(text);
 
         if (errors.length === 0) {
-            vscode.window.showInformationMessage('✅ No se detectaron errores SQL comunes');
-            logInfo('Análisis SQL: sin errores detectados');
+            vscode.window.showInformationMessage('✅ No common SQL issues detected');
+            logInfo('SQL analysis: no errors detected');
             // Limpiar diagnosticos previos
             this.clearDiagnostics(document.uri);
             return;
@@ -61,7 +61,7 @@ export class MySqlHelper {
         }));
 
         const selected = await vscode.window.showQuickPick(errorItems, {
-            placeHolder: `Se encontraron ${errors.length} error(es) en SQL. Selecciona uno para ver la solución`
+            placeHolder: `Found ${errors.length} SQL error(s). Select one to view details`
         });
 
         if (selected) {
@@ -70,7 +70,7 @@ export class MySqlHelper {
     }
 
     /**
-     * Extrae strings SQL de código (Java, JavaScript, Python)
+     * Extracts SQL strings from code (Java, JavaScript, Python)
      */
     private static extractSqlFromCode(code: string, language: string): string {
         const sqlQueries: string[] = [];
@@ -107,7 +107,7 @@ export class MySqlHelper {
     }
 
     /**
-     * Detecta errores comunes en SQL
+     * Detects common SQL errors
      */
     private static detectErrors(text: string): SqlError[] {
         const errors: SqlError[] = [];
@@ -122,9 +122,9 @@ export class MySqlHelper {
             // 1. Detectar falta de punto y coma al final
             if (this.isQueryLine(line) && !line.trim().endsWith(';') && !line.trim().endsWith(',')) {
                 errors.push({
-                    type: 'Falta punto y coma',
-                    description: `Línea ${idx + 1}: "${line.trim()}"`,
-                    suggestion: 'Las sentencias SQL deben terminar con ;',
+                    type: 'Missing semicolon',
+                    description: `Line ${idx + 1}: "${line.trim()}"`,
+                    suggestion: 'SQL statements should end with ;',
                     line: idx + 1
                 });
             }
@@ -132,9 +132,9 @@ export class MySqlHelper {
             // 2. Detectar comillas sin cerrar
             if ((line.match(/'/g) || []).length % 2 !== 0) {
                 errors.push({
-                    type: 'Comilla sin cerrar',
-                    description: `Línea ${idx + 1}: ${line.trim()}`,
-                    suggestion: 'Verifica que todas las comillas simples estén balanceadas',
+                    type: 'Unclosed quote',
+                    description: `Line ${idx + 1}: ${line.trim()}`,
+                    suggestion: 'Ensure all single quotes are balanced',
                     line: idx + 1
                 });
             }
@@ -144,9 +144,9 @@ export class MySqlHelper {
             const closeParen = (line.match(/\)/g) || []).length;
             if (openParen !== closeParen) {
                 errors.push({
-                    type: 'Paréntesis desbalanceados',
-                    description: `Línea ${idx + 1}: ${line.trim()}`,
-                    suggestion: `Abre: ${openParen}, Cierra: ${closeParen}. Verifica que estén balanceados`,
+                    type: 'Unbalanced parentheses',
+                    description: `Line ${idx + 1}: ${line.trim()}`,
+                    suggestion: `Open: ${openParen}, Close: ${closeParen}. Ensure parentheses are balanced`,
                     line: idx + 1
                 });
             }
@@ -161,9 +161,9 @@ export class MySqlHelper {
                     // Permitir SELECT COUNT(*), NOW(), etc. sin FROM
                     if (!afterSelect.match(/COUNT\s*\(|NOW\s*\(|CURDATE\s*\(/i)) {
                         errors.push({
-                            type: 'SELECT sin FROM',
-                            description: `Línea ${idx + 1}: ${line.trim()}`,
-                            suggestion: 'La mayoría de SELECT requieren una cláusula FROM. Ej: SELECT * FROM tabla',
+                            type: 'SELECT without FROM',
+                            description: `Line ${idx + 1}: ${line.trim()}`,
+                            suggestion: 'Most SELECT queries require a FROM clause. E.g.: SELECT * FROM table',
                             line: idx + 1
                         });
                     }
@@ -173,9 +173,9 @@ export class MySqlHelper {
             // 5. Detectar INSERT sin VALUES
             if (line.toUpperCase().includes('INSERT INTO') && !line.toUpperCase().includes('VALUES')) {
                 errors.push({
-                    type: 'INSERT sin VALUES',
-                    description: `Línea ${idx + 1}: ${line.trim()}`,
-                    suggestion: 'INSERT INTO tabla (columnas) VALUES (valores);',
+                    type: 'INSERT without VALUES',
+                    description: `Line ${idx + 1}: ${line.trim()}`,
+                    suggestion: 'INSERT INTO table (columns) VALUES (values);',
                     line: idx + 1
                 });
             }
@@ -183,9 +183,9 @@ export class MySqlHelper {
             // 6. Detectar UPDATE sin WHERE (advertencia)
             if (line.toUpperCase().includes('UPDATE') && !line.toUpperCase().includes('WHERE')) {
                 errors.push({
-                    type: '⚠️ UPDATE sin WHERE',
-                    description: `Línea ${idx + 1}: ${line.trim()}`,
-                    suggestion: 'UPDATE sin WHERE afectará TODAS las filas. Ej: UPDATE tabla SET col=val WHERE condicion;',
+                    type: '⚠️ UPDATE without WHERE',
+                    description: `Line ${idx + 1}: ${line.trim()}`,
+                    suggestion: 'UPDATE without WHERE will affect ALL rows. E.g.: UPDATE table SET col=val WHERE condition;',
                     line: idx + 1
                 });
             }
@@ -193,9 +193,9 @@ export class MySqlHelper {
             // 7. Detectar DELETE sin WHERE (advertencia crítica)
             if (line.toUpperCase().includes('DELETE FROM') && !line.toUpperCase().includes('WHERE')) {
                 errors.push({
-                    type: '🔴 DELETE sin WHERE',
-                    description: `Línea ${idx + 1}: ${line.trim()}`,
-                    suggestion: 'DELETE sin WHERE ELIMINARÁ TODAS LAS FILAS. Ej: DELETE FROM tabla WHERE condicion;',
+                    type: '🔴 DELETE without WHERE',
+                    description: `Line ${idx + 1}: ${line.trim()}`,
+                    suggestion: 'DELETE without WHERE will REMOVE ALL ROWS. E.g.: DELETE FROM table WHERE condition;',
                     line: idx + 1
                 });
             }
@@ -206,9 +206,9 @@ export class MySqlHelper {
                 const regex = new RegExp(`(SELECT|FROM|WHERE|ORDER|GROUP|HAVING|LIMIT|JOIN|ON)\\s+${word}\\b`, 'i');
                 if (regex.test(line)) {
                     errors.push({
-                        type: 'Palabra reservada como nombre',
-                        description: `Línea ${idx + 1}: "${word}" es una palabra reservada de SQL`,
-                        suggestion: `Usa backticks para escapar: \`${word}\` o renombra la columna`,
+                        type: 'Reserved word used as name',
+                        description: `Line ${idx + 1}: "${word}" is a reserved SQL word`,
+                        suggestion: `Use backticks to escape: \`${word}\` or rename the column`,
                         line: idx + 1
                     });
                 }
@@ -219,7 +219,7 @@ export class MySqlHelper {
     }
 
     /**
-     * Determina si una línea es una sentencia SQL
+     * Determines if a line is an SQL statement
      */
     private static isQueryLine(line: string): boolean {
         const trimmed = line.trim().toUpperCase();
@@ -227,7 +227,7 @@ export class MySqlHelper {
     }
 
     /**
-     * Muestra detalles del error en una ventana
+     * Shows error details in a modal window
      */
     private static showErrorDetails(error: SqlError): void {
         const message = `
@@ -235,21 +235,21 @@ export class MySqlHelper {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📍 ${error.description}
 
-💡 **Solución:**
+💡 **Fix:**
 ${error.suggestion}
 
-**Más información:**
-- Asegúrate de que la sintaxis sea correcta
-- Verifica todos los operadores y delimitadores
-- Consulta la documentación de MySQL si es necesario
+**More information:**
+- Ensure the syntax is correct
+- Verify all operators and delimiters
+- Consult your DB documentation if needed
         `.trim();
 
         vscode.window.showInformationMessage(message, { modal: true });
-        logInfo(`Error SQL detectado: ${error.type}`);
+        logInfo(`Detected SQL error: ${error.type}`);
     }
 
     /**
-     * Obtiene sugerencias de corrección automática
+     * Returns an automatic fix suggestion for detected errors
      */
     static async getAutoFix(editor: vscode.TextEditor, text: string): Promise<string | null> {
         const errors = this.detectErrors(text);
@@ -260,12 +260,12 @@ ${error.suggestion}
         let fixed = text;
 
         errors.forEach(error => {
-            if (error.type === 'Falta punto y coma') {
-                // Agregar punto y coma al final de sentencias
+            if (error.type === 'Missing semicolon') {
+                // Add semicolon at the end of statements
                 fixed = fixed.replace(/(\w+)\s*$/, '$1;');
             }
-            if (error.type === 'Comilla sin cerrar') {
-                // Intenta cerrar comillas
+            if (error.type === 'Unclosed quote') {
+                // Try to close quotes
                 fixed = fixed.replace(/([^\\])'([^']*)$/, "$1'$2'");
             }
         });
@@ -274,7 +274,7 @@ ${error.suggestion}
     }
 
     /**
-     * Publica los errores en el panel Problems (Diagnostics)
+     * Publishes diagnostics to the Problems panel
      */
     private static publishDiagnostics(document: vscode.TextDocument, errors: SqlError[]): void {
         // Inicializar DiagnosticCollection si no existe
@@ -303,11 +303,11 @@ ${error.suggestion}
         });
 
         diagnosticCollection.set(document.uri, diagnostics);
-        logInfo(`Publicados ${diagnostics.length} errores SQL en el panel Problems`);
+        logInfo(`Published ${diagnostics.length} SQL issues to the Problems panel`);
     }
 
     /**
-     * Limpia los diagnosticos para un archivo
+     * Clears diagnostics for a document
      */
     private static clearDiagnostics(uri: vscode.Uri): void {
         if (diagnosticCollection) {
@@ -340,8 +340,8 @@ export async function formatSqlQuery(editor: vscode.TextEditor): Promise<void> {
         });
     }
 
-    logInfo('Consulta SQL formateada');
-    vscode.window.showInformationMessage('✅ SQL formateado correctamente');
+    logInfo('SQL query formatted');
+    vscode.window.showInformationMessage('✅ SQL formatted successfully');
 }
 
 /**

@@ -1,7 +1,7 @@
 {
   "name": "sql-helper",
   "displayName": "SQL Helper",
-  "description": "Extensión avanzada con snippets SQL, Java JDBC, Python y JavaScript para bases de datos",
+  "description": "Advanced extension with SQL, Java JDBC, Python and JavaScript snippets for databases",
   "version": "0.1.7",
   "publisher": "marcosgdz03",
   "engines": {
@@ -43,18 +43,18 @@
     "commands": [
       {
         "command": "sql-helper.insertSnippet",
-        "title": "SQL Helper: Insertar snippet",
-        "description": "Abre el selector de snippets para SQL, Java, Python o JavaScript"
+        "title": "SQL Helper: Insert snippet",
+        "description": "Open the snippet selector for SQL, Java, Python or JavaScript"
       },
       {
         "command": "sql-helper.analyzeSql",
-        "title": "SQL Helper: Analizar SQL",
-        "description": "Detecta errores comunes en consultas SQL"
+        "title": "SQL Helper: Analyze SQL",
+        "description": "Detect common issues in SQL queries"
       },
       {
         "command": "sql-helper.formatSql",
-        "title": "SQL Helper: Formatear SQL",
-        "description": "Formatea y mejora la legibilidad de consultas SQL"
+        "title": "SQL Helper: Format SQL",
+        "description": "Format and improve readability of SQL queries"
       }
     ],
     "keybindings": [

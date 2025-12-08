@@ -17,20 +17,20 @@ import { MySqlHelper, formatSqlQuery } from './utils/mySqlHelper';
 const EXTENSION_NAME = 'SQL Helper';
 
 export function activate(context: vscode.ExtensionContext) {
-    logInfo(`${EXTENSION_NAME} activado correctamente`);
+    logInfo(`${EXTENSION_NAME} activated`);
 
     const disposable = vscode.commands.registerCommand('sql-helper.insertSnippet', async () => {
         try {
-            // Obtener editor activo
+            // Get active editor
             const editor = getActiveEditor();
             if (!editor) {
                 return;
             }
 
-            // Detectar lenguaje automáticamente
+            // Detect language automatically
             let mode = detectLanguage(editor);
 
-            // Si no se detecta, preguntar al usuario
+            // If not detected, ask the user
             if (!mode) {
                 mode = await pickSnippetType();
                 if (!mode) {
@@ -38,9 +38,9 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             }
 
-            logInfo(`Modo seleccionado: ${mode}`);
+            logInfo(`Selected mode: ${mode}`);
 
-            // Mostrar snippets según el lenguaje
+            // Show snippets by language
             switch (mode) {
                 case 'sql':
                     await showSqlSnippets(editor);
@@ -58,14 +58,14 @@ export function activate(context: vscode.ExtensionContext) {
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
-            logError(`Error en ${EXTENSION_NAME}: ${errorMessage}`);
-            showError(`Error inesperado. Revisa la consola para más detalles.`);
+            logError(`Error in ${EXTENSION_NAME}: ${errorMessage}`);
+            showError(`Unexpected error. Check the console for details.`);
         }
     });
 
     context.subscriptions.push(disposable);
 
-    // Comando para analizar errores SQL
+    // Command to analyze SQL issues
     const analyzeSqlCommand = vscode.commands.registerCommand('sql-helper.analyzeSql', async () => {
         try {
             const editor = getActiveEditor();
@@ -73,23 +73,22 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            // Verificar que sea un archivo compatible (SQL, Java, JS, Python)
+            // Verify this is a supported file (SQL, Java, JS, Python)
             const langId = editor.document.languageId;
             if (!['sql', 'java', 'javascript', 'typescript', 'python'].includes(langId)) {
-                showError('Este comando funciona con: SQL, Java, JavaScript, TypeScript y Python');
+                showError('This command works with: SQL, Java, JavaScript, TypeScript and Python');
                 return;
             }
-
-            logInfo('Analizando SQL para errores...');
+            logInfo('Analyzing SQL for issues...');
             await MySqlHelper.analyzeSql(editor);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
-            logError(`Error analizando SQL: ${errorMessage}`);
-            showError('Error al analizar SQL');
+            logError(`Error analyzing SQL: ${errorMessage}`);
+            showError('Error analyzing SQL');
         }
     });
 
-    // Comando para formatear SQL
+    // Command to format SQL
     const formatSqlCommand = vscode.commands.registerCommand('sql-helper.formatSql', async () => {
         try {
             const editor = getActiveEditor();
@@ -97,19 +96,18 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            // Verificar que sea un archivo compatible (SQL, Java, JS, Python)
+            // Verify this is a supported file (SQL, Java, JS, Python)
             const langId = editor.document.languageId;
             if (!['sql', 'java', 'javascript', 'typescript', 'python'].includes(langId)) {
-                showError('Este comando funciona con: SQL, Java, JavaScript, TypeScript y Python');
+                showError('This command works with: SQL, Java, JavaScript, TypeScript and Python');
                 return;
             }
-
-            logInfo('Formateando SQL...');
+            logInfo('Formatting SQL...');
             await formatSqlQuery(editor);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
-            logError(`Error formateando SQL: ${errorMessage}`);
-            showError('Error al formatear SQL');
+            logError(`Error formatting SQL: ${errorMessage}`);
+            showError('Error formatting SQL');
         }
     });
 
@@ -118,5 +116,5 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    logInfo(`${EXTENSION_NAME} desactivado`);
+    logInfo(`${EXTENSION_NAME} deactivated`);
 }

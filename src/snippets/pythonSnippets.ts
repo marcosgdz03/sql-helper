@@ -12,16 +12,16 @@ interface SnippetItem {
 export async function showPythonSnippets(editor: vscode.TextEditor) {
     const pyItems: SnippetItem[] = [
         {
-            label: '📦 Conexión SQLite',
+            label: '📦 SQLite Connection',
             snippet: `import sqlite3
 
 def get_connection():
     conn = sqlite3.connect("\${1:database}.db")
     return conn`,
-            description: 'Base de datos SQLite local'
+            description: 'Local SQLite database'
         },
         {
-            label: '🔵 Conexión PostgreSQL',
+            label: '🔵 PostgreSQL Connection',
             snippet: `import psycopg2
 
 def get_connection():
@@ -32,10 +32,10 @@ def get_connection():
         password="\${4:password}"
     )
     return conn`,
-            description: 'Conexión PostgreSQL'
+            description: 'PostgreSQL connection'
         },
         {
-            label: '🔶 Conexión MySQL',
+            label: '🔶 MySQL Connection',
             snippet: `import mysql.connector
 
 def get_connection():
@@ -46,25 +46,25 @@ def get_connection():
         password="\${4:password}"
     )
     return conn`,
-            description: 'Conexión MySQL'
+            description: 'MySQL connection'
         },
         {
-            label: '📄 Crear init.sql',
+            label: '📄 Create init.sql',
             snippet: `-- Script de inicialización de base de datos
 CREATE TABLE IF NOT EXISTS ejemplo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL
 );`,
-            description: 'Crear tablas de prueba'
+            description: 'Create test tables'
         },
         {
-            label: '🌱 Crear seed.sql',
+            label: '🌱 Create seed.sql',
             snippet: `-- Datos iniciales
 INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
-            description: 'Insertar datos de prueba'
+            description: 'Insert test data'
         },
         {
-            label: '🏗️ Clase DAO',
+            label: '🏗️ DAO Class',
             snippet: `class \${1:Entidad}DAO:
     def __init__(self, conn):
         self.conn = conn
@@ -80,7 +80,7 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
             (obj.\${4:campo},)
         )
         self.conn.commit()`,
-            description: 'Patrón Data Access Object'
+            description: 'Data Access Object pattern'
         },
         {
             label: '🎯 Context Manager',
@@ -90,7 +90,7 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
         # ejecutar consultas
 except Exception as e:
     print("Error:", e)`,
-            description: 'Manejo seguro de conexiones'
+            description: 'Safe connection handling'
         },
         {
             label: '📊 Logging',
@@ -99,42 +99,42 @@ except Exception as e:
 logging.basicConfig(level=logging.INFO)
 logging.info("Mensaje informativo")
 logging.error("Mensaje de error")`,
-            description: 'Sistema de logging'
+            description: 'Logging setup'
         },
         {
-            label: '👁️ SELECT simple',
+            label: '👁️ Simple SELECT',
             snippet: `cursor.execute("SELECT * FROM \${1:tabla}")
 rows = cursor.fetchall()
 for row in rows:
     print(row)`,
-            description: 'Consulta SELECT'
+            description: 'SELECT query'
         },
         {
-            label: '➕ INSERT simple',
+            label: '➕ Simple INSERT',
             snippet: `cursor.execute(
     "INSERT INTO \${1:tabla} (\${2:col1}, \${3:col2}) VALUES (?, ?)",
     (\${4:val1}, \${5:val2})
 )
 conn.commit()`,
-            description: 'Insertar registro'
+            description: 'Insert record'
         },
         {
-            label: '✏️ UPDATE simple',
+            label: '✏️ Simple UPDATE',
             snippet: `cursor.execute(
     "UPDATE \${1:tabla} SET \${2:columna} = ? WHERE id = ?",
     (\${3:nuevoValor}, \${4:id})
 )
 conn.commit()`,
-            description: 'Actualizar registro'
+            description: 'Update record'
         },
         {
-            label: '🗑️ DELETE simple',
+            label: '🗑️ Simple DELETE',
             snippet: `cursor.execute(
     "DELETE FROM \${1:tabla} WHERE id = ?",
     (\${2:id},)
 )
 conn.commit()`,
-            description: 'Eliminar registro'
+            description: 'Delete record'
         }
     ];
 
@@ -144,18 +144,18 @@ conn.commit()`,
             detail: i.description || i.snippet.substring(0, 50) + '...',
             snippet: i.snippet
         })),
-        { placeHolder: 'Snippet Python DB / Crear ficheros', matchOnDetail: true }
+        { placeHolder: 'Python DB snippets / Create files', matchOnDetail: true }
     );
 
     if (!pick) {
-        logInfo('Selección de snippet Python cancelada');
+        logInfo('Python snippet selection cancelled');
         return;
     }
 
     const filesToCreate = [
-        'Conexión SQLite',
-        'Conexión PostgreSQL',
-        'Conexión MySQL',
+        'SQLite Connection',
+        'PostgreSQL Connection',
+        'MySQL Connection',
         'init.sql',
         'seed.sql'
     ];
@@ -163,25 +163,25 @@ conn.commit()`,
     if (filesToCreate.some(f => pick.label.includes(f))) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
-            vscode.window.showErrorMessage('Abre primero una carpeta de proyecto para crear el fichero.');
+            vscode.window.showErrorMessage('Open a project folder first to create the file.');
             return;
         }
 
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case '📦 Conexión SQLite': { fileName = 'sqlite_connection.py'; break; }
-            case '🔵 Conexión PostgreSQL': { fileName = 'postgres_connection.py'; break; }
-            case '🔶 Conexión MySQL': { fileName = 'mysql_connection.py'; break; }
-            case '📄 Crear init.sql': { fileName = 'init.sql'; break; }
-            case '🌱 Crear seed.sql': { fileName = 'seed.sql'; break; }
+            case '📦 SQLite Connection': { fileName = 'sqlite_connection.py'; break; }
+            case '🔵 PostgreSQL Connection': { fileName = 'postgres_connection.py'; break; }
+            case '🔶 MySQL Connection': { fileName = 'mysql_connection.py'; break; }
+            case '📄 Create init.sql': { fileName = 'init.sql'; break; }
+            case '🌱 Create seed.sql': { fileName = 'seed.sql'; break; }
             default: fileName = 'snippet.py';
         }
 
         const filePath = path.join(folderPath, fileName);
 
         if (fs.existsSync(filePath)) {
-            vscode.window.showWarningMessage(`${fileName} ya existe.`);
+            vscode.window.showWarningMessage(`${fileName} already exists.`);
             return;
         }
 
@@ -189,10 +189,10 @@ conn.commit()`,
             fs.writeFileSync(filePath, pick.snippet, 'utf8');
             const doc = await vscode.workspace.openTextDocument(filePath);
             await vscode.window.showTextDocument(doc);
-            logInfo(`Archivo ${fileName} creado`);
+            logInfo(`File ${fileName} created`);
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : String(err);
-            logError(`Error creando archivo: ${errorMsg}`);
+            logError(`Error creating file: ${errorMsg}`);
             vscode.window.showErrorMessage(`Error: ${errorMsg}`);
         }
         return;
@@ -200,10 +200,10 @@ conn.commit()`,
 
     try {
         await editor.insertSnippet(new vscode.SnippetString(pick.snippet));
-        logInfo(`Snippet Python insertado: ${pick.label}`);
+        logInfo(`Python snippet inserted: ${pick.label}`);
     } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        logError(`Error insertando snippet: ${errorMsg}`);
+        logError(`Error inserting snippet: ${errorMsg}`);
         vscode.window.showErrorMessage(`Error: ${errorMsg}`);
     }
 }

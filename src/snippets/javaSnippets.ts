@@ -12,7 +12,7 @@ interface SnippetItem {
 export async function showJavaSnippets(editor: vscode.TextEditor) {
     const javaItems: SnippetItem[] = [
         {
-            label: '🗄️ Crear DatabaseConnection',
+            label: '🗄️ Create DatabaseConnection',
             snippet: `import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -26,10 +26,10 @@ public class DatabaseConnection {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }`,
-            description: 'Clase de conexión JDBC'
+            description: 'JDBC connection class'
         },
         {
-            label: '📝 Crear BasicQueries',
+            label: '📝 Create BasicQueries',
             snippet: `import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -38,12 +38,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BasicQueries {
-    // Métodos CRUD básicos aquí...
+    // Basic CRUD methods here...
 }`,
-            description: 'Clase base para consultas CRUD'
+            description: 'Base class for CRUD queries'
         },
         {
-            label: '⚙️ Crear QueryExecutor',
+            label: '⚙️ Create QueryExecutor',
             snippet: `import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -70,36 +70,36 @@ public class QueryExecutor {
         return ps.executeQuery();
     }
 }`,
-            description: 'Ejecutor de consultas parametrizadas'
+            description: 'Parameterized query executor'
         },
         {
-            label: '📄 Crear init.sql',
-            snippet: `-- Script de creación de tablas
-CREATE TABLE IF NOT EXISTS ejemplo (
+            label: '📄 Create init.sql',
+            snippet: `-- Table creation script
+CREATE TABLE IF NOT EXISTS example (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL
 );`,
-            description: 'Script de inicialización'
+            description: 'Initialization script'
         },
         {
-            label: '🌱 Crear seed.sql',
-            snippet: `-- Script de inserción de datos iniciales
-INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
-            description: 'Datos de prueba'
+            label: '🌱 Create seed.sql',
+            snippet: `-- Seed insertion script
+INSERT INTO example (name) VALUES ('data1'), ('data2');`,
+            description: 'Seed data'
         },
         {
-            label: '🔄 Transacción (commit/rollback)',
+            label: '🔄 Transaction (commit/rollback)',
             snippet: `try (Connection conn = DatabaseConnection.getConnection()) {
     try {
         conn.setAutoCommit(false);
-        // ejecutar consultas
+        // execute queries
         conn.commit();
     } catch (SQLException e) {
         conn.rollback();
         throw e;
     }
 }`,
-            description: 'Manejo de transacciones'
+            description: 'Transaction handling'
         }
     ];
 
@@ -109,11 +109,11 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
             detail: i.description || i.snippet.substring(0, 50) + '...',
             snippet: i.snippet
         })),
-        { placeHolder: 'Método JDBC / Crear ficheros / Transacciones' }
+        { placeHolder: 'JDBC methods / Create files / Transactions' }
     );
 
     if (!pick) {
-        logInfo('Selección de snippet Java cancelada');
+        logInfo('Java snippet selection cancelled');
         return;
     }
 
@@ -128,30 +128,30 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
     if (filesToCreate.some(f => pick.label.includes(f))) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
-            vscode.window.showErrorMessage('Abre primero una carpeta de proyecto para crear el fichero.');
+            vscode.window.showErrorMessage('Open a project folder first to create the file.');
             return;
         }
 
         const folderPath = workspaceFolders[0].uri.fsPath;
         let fileName = '';
         switch (pick.label) {
-            case '🗄️ Crear DatabaseConnection': {
+            case '🗄️ Create DatabaseConnection': {
                 fileName = 'DatabaseConnection.java';
                 break;
             }
-            case '📝 Crear BasicQueries': {
+            case '📝 Create BasicQueries': {
                 fileName = 'BasicQueries.java';
                 break;
             }
-            case '⚙️ Crear QueryExecutor': {
+            case '⚙️ Create QueryExecutor': {
                 fileName = 'QueryExecutor.java';
                 break;
             }
-            case '📄 Crear init.sql': {
+            case '📄 Create init.sql': {
                 fileName = 'init.sql';
                 break;
             }
-            case '🌱 Crear seed.sql': {
+            case '🌱 Create seed.sql': {
                 fileName = 'seed.sql';
                 break;
             }
@@ -160,7 +160,7 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
         const filePath = path.join(folderPath, fileName);
 
         if (fs.existsSync(filePath)) {
-            vscode.window.showWarningMessage(`${fileName} ya existe.`);
+            vscode.window.showWarningMessage(`${fileName} already exists.`);
             return;
         }
 
@@ -168,10 +168,10 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
             fs.writeFileSync(filePath, pick.snippet, 'utf8');
             const doc = await vscode.workspace.openTextDocument(filePath);
             await vscode.window.showTextDocument(doc);
-            logInfo(`Archivo ${fileName} creado`);
+            logInfo(`File ${fileName} created`);
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : String(err);
-            logError(`Error creando archivo: ${errorMsg}`);
+            logError(`Error creating file: ${errorMsg}`);
             vscode.window.showErrorMessage(`Error: ${errorMsg}`);
         }
         return;
@@ -180,10 +180,10 @@ INSERT INTO ejemplo (nombre) VALUES ('dato1'), ('dato2');`,
     // Insertar snippet
     try {
         await editor.insertSnippet(new vscode.SnippetString(pick.snippet));
-        logInfo(`Snippet Java insertado: ${pick.label}`);
+        logInfo(`Java snippet inserted: ${pick.label}`);
     } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        logError(`Error insertando snippet: ${errorMsg}`);
+        logError(`Error inserting snippet: ${errorMsg}`);
         vscode.window.showErrorMessage(`Error: ${errorMsg}`);
     }
 }
