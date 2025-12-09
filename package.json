@@ -30,8 +30,7 @@
     "onLanguage:sql",
     "onLanguage:python",
     "onLanguage:javascript",
-    "onLanguage:typescript",
-    "onCommand:sql-helper.generateProject"
+    "onLanguage:typescript"
   ],
   "main": "./out/extension.js",
   "repository": {
