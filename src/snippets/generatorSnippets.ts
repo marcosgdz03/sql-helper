@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { chooseJavaFramework } from "../generator/javaGenerator";
 import { choosePythonFramework } from "../generator//pythonGenerator";
-import { chooseJsFramework } from "../generator//jsGenerator";
+import { chooseJsFramework } from "../generator/jsGenerator";
 
 export async function showProjectGenerator() {
     const languages: vscode.QuickPickItem[] = [

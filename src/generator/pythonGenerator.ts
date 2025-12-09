@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { chooseDatabase } from "../utils/utils";
 import { exec } from "child_process";
+import { chooseDatabase } from "../utils/utils";
 
 type DbType = "PostgreSQL" | "MySQL" | "SQLite";
 
@@ -17,6 +17,12 @@ export async function choosePythonFramework() {
     });
     if (!framework) return;
 
+    const pyVersion = await vscode.window.showQuickPick(
+        [{ label: "3.10" }, { label: "3.11" }, { label: "3.12" }],
+        { placeHolder: "Choose Python version" }
+    );
+    if (!pyVersion) return;
+
     const db = await chooseDatabase();
     if (!db) return;
 
@@ -26,14 +32,15 @@ export async function choosePythonFramework() {
     const projectPath = path.join(folderUri[0].fsPath, framework.label.toLowerCase());
     fs.mkdirSync(projectPath, { recursive: true });
 
-    await generatePythonProject(projectPath, framework.label, db as DbType);
+    await generatePythonProject(projectPath, framework.label, pyVersion.label, db as DbType);
 
-    vscode.window.showInformationMessage(`Python project generated (${framework.label})`);
+    vscode.window.showInformationMessage(`Python project generated (${framework.label} with Python ${pyVersion.label})`);
 }
 
 export async function generatePythonProject(
     projectPath: string,
     framework: string,
+    pyVersion: string,
     db: DbType
 ): Promise<void> {
     const dbName = await vscode.window.showInputBox({
@@ -50,6 +57,9 @@ export async function generatePythonProject(
 
     const tables = tablesInput.split(",").map(t => t.trim());
 
+    // Crear virtualenv
+    exec(`python${pyVersion} -m venv ${path.join(projectPath, "venv")}`);
+
     // Generación del proyecto base
     if (framework === "Flask") {
         await createFlaskProject(projectPath, framework, db);
@@ -57,11 +67,42 @@ export async function generatePythonProject(
         await createFastApiProject(projectPath, framework, db);
     }
 
-    // Crear módulo de DB
+    // Crear módulo de DB y CRUD
     await createDbModule(projectPath, db, dbName, tables);
 
-    vscode.window.showInformationMessage(
-        `Python project ready with database ${dbName} and tables: ${tables.join(", ")}`
+    // Crear modelos y CRUD por tabla
+    await createModelsAndCrud(projectPath, tables);
+
+    // README
+    fs.writeFileSync(
+        path.join(projectPath, "README.md"),
+        `# ${framework} Project
+
+Python version: ${pyVersion}
+Database: ${db} (${dbName})
+Tables: ${tables.join(", ")}
+
+## Setup
+
+\`\`\`bash
+cd ${projectPath}
+source venv/bin/activate  # Activate virtualenv (Linux/Mac)
+# .\\venv\\Scripts\\activate for Windows
+pip install -r requirements.txt
+\`\`\`
+
+## Run
+
+Flask:
+\`\`\`bash
+python app/app.py
+\`\`\`
+
+FastAPI:
+\`\`\`bash
+uvicorn app.main:app --reload
+\`\`\`
+`
     );
 }
 
@@ -76,7 +117,7 @@ async function createFlaskProject(folder: string, name: string, db: DbType) {
 
     const appPy = `
 from flask import Flask
-from db import init_db
+from db.db import init_db
 ${dbImports[db]}
 
 app = Flask(__name__)
@@ -100,11 +141,6 @@ ${db === "PostgreSQL" ? "psycopg2" :
             db === "MySQL" ? "mysql-connector-python" :
                 db === "SQLite" ? "aiosqlite" : ""}`
     );
-
-    fs.writeFileSync(
-        path.join(folder, "README.md"),
-        `# Flask Project\n\nRun:\n\n\`\`\`bash\npip install -r requirements.txt\npython app/app.py\n\`\`\``
-    );
 }
 
 async function createFastApiProject(folder: string, name: string, db: DbType) {
@@ -118,7 +154,7 @@ async function createFastApiProject(folder: string, name: string, db: DbType) {
 
     const mainPy = `
 from fastapi import FastAPI
-from db import init_db
+from db.db import init_db
 ${dbImports[db]}
 
 app = FastAPI()
@@ -143,60 +179,55 @@ ${db === "PostgreSQL" ? "asyncpg" :
             db === "MySQL" ? "aiomysql" :
                 db === "SQLite" ? "aiosqlite" : ""}`
     );
-
-    fs.writeFileSync(
-        path.join(folder, "README.md"),
-        `# FastAPI Project
-
-Run:
-
-\`\`\`bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-\`\`\`
-`
-    );
 }
 
 // Crear módulo db.py con conexión y creación de tablas
 async function createDbModule(projectPath: string, db: DbType, dbName: string, tables: string[]) {
-    const dbFile = path.join(projectPath, "db.py");
+    const dbFolder = path.join(projectPath, "db");
+    fs.mkdirSync(dbFolder, { recursive: true });
+    const dbFile = path.join(dbFolder, "db.py");
 
-    let code = "";
+    let code = `import os\nfrom .config import DB_USER, DB_PASSWORD, DB_HOST\n`;
     if (db === "PostgreSQL") {
-        code = `
+        code += `
 import psycopg2
 from psycopg2 import sql
 
 def init_db():
-    conn = psycopg2.connect(dbname='postgres', user='postgres', password='password', host='localhost')
-    conn.autocommit = True
-    cur = conn.cursor()
-    cur.execute("CREATE DATABASE ${dbName}")
-    conn.close()
+    try:
+        conn = psycopg2.connect(dbname='postgres', user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
+        conn.autocommit = True
+        cur = conn.cursor()
+        cur.execute("CREATE DATABASE ${dbName}")
+        conn.close()
+    except Exception as e:
+        print("Database exists or cannot create:", e)
 
-    conn = psycopg2.connect(dbname='${dbName}', user='postgres', password='password', host='localhost')
+    conn = psycopg2.connect(dbname='${dbName}', user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
     cur = conn.cursor()
     ${tables.map(t => `cur.execute("CREATE TABLE IF NOT EXISTS ${t} (id SERIAL PRIMARY KEY, name VARCHAR(255));")`).join("\n    ")}
     conn.commit()
     conn.close()
 `;
     } else if (db === "MySQL") {
-        code = `
+        code += `
 import mysql.connector
 
 def init_db():
-    conn = mysql.connector.connect(user='root', password='password', host='127.0.0.1')
-    cur = conn.cursor()
-    cur.execute("CREATE DATABASE IF NOT EXISTS ${dbName}")
-    conn.database = '${dbName}'
-    ${tables.map(t => `cur.execute("CREATE TABLE IF NOT EXISTS ${t} (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));")`).join("\n    ")}
-    conn.commit()
-    conn.close()
+    try:
+        conn = mysql.connector.connect(user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
+        cur = conn.cursor()
+        cur.execute("CREATE DATABASE IF NOT EXISTS ${dbName}")
+        conn.database = '${dbName}'
+        ${tables.map(t => `cur.execute("CREATE TABLE IF NOT EXISTS ${t} (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));")`).join("\n    ")}
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Error creating DB or tables:", e)
 `;
     } else {
         // SQLite
-        code = `
+        code += `
 import sqlite3
 
 def init_db():
@@ -209,4 +240,44 @@ def init_db():
     }
 
     fs.writeFileSync(dbFile, code);
+
+    // Config file
+    const configFile = path.join(dbFolder, "config.py");
+    fs.writeFileSync(
+        configFile,
+        `DB_USER = "postgres"\nDB_PASSWORD = "password"\nDB_HOST = "localhost"\n`
+    );
+}
+
+// Crear modelos y CRUD básicos
+async function createModelsAndCrud(projectPath: string, tables: string[]) {
+    const modelsFolder = path.join(projectPath, "app", "models");
+    const crudFolder = path.join(projectPath, "app", "crud");
+    fs.mkdirSync(modelsFolder, { recursive: true });
+    fs.mkdirSync(crudFolder, { recursive: true });
+
+    for (const table of tables) {
+        const className = table.charAt(0).toUpperCase() + table.slice(1);
+
+        const modelCode = `
+class ${className}:
+    def __init__(self, id=None, name=None):
+        self.id = id
+        self.name = name
+`;
+        fs.writeFileSync(path.join(modelsFolder, `${table}.py`), modelCode);
+
+        const crudCode = `
+from db.db import init_db
+
+async def create_${table}(obj):
+    await init_db()
+    # TODO: Implement insert logic
+
+async def get_all_${table}():
+    await init_db()
+    # TODO: Implement select logic
+`;
+        fs.writeFileSync(path.join(crudFolder, `${table}.py`), crudCode);
+    }
 }
