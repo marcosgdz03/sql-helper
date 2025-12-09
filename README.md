@@ -1,10 +1,10 @@
 # 🗄️ SQL Helper
 
-[![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/marcosgdz03.sql-helper)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history) [![Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/marcosgdz03.sql-helper)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history) [![Marketplace Rating](https://img.shields.io/visual-studio-marketplace/rating/marcosgdz03.sql-helper?label=rating)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#review-details) [![GitHub stars](https://img.shields.io/github/stars/marcosgdz03/sql-helper?style=social)](https://github.com/marcosgdz03/sql-helper/stargazers) [![License](https://img.shields.io/github/license/marcosgdz03/sql-helper)](./LICENSE.md)
+[![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/marcosgdz03.sql-helper)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history) [![Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/marcosgdz03.sql-helper)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history) [![Marketplace Rating](https://img.shields.io/visual-studio-marketplace/rating/marcosgdz03/sql-helper?label=rating)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#review-details) [![GitHub stars](https://img.shields.io/github/stars/marcosgdz03/sql-helper?style=social)](https://github.com/marcosgdz03/sql-helper/stargazers) [![License](https://img.shields.io/github/license/marcosgdz03/sql-helper)](./LICENSE.md)
 
 **SQL Helper** is an advanced **Visual Studio Code** extension that accelerates database development by providing:
 
-1. **70+ professional snippets** pfor SQL, Java JDBC, Python, and JavaScript/TypeScript
+1. **70+ professional snippets** for SQL, Java JDBC, Python, and JavaScript/TypeScript
 2. **Smart SQL Analyzer** that detects errors in any language
 3. **SQL Formatter** for automatic readability improvement
 
@@ -50,35 +50,24 @@ Generate **production-ready code** in seconds — from complex SQL queries to fu
 Detects **8+ error types**:
 
 - Missing semicolon (;)
-
 - Unbalanced quotes (', ")
-
 - Unbalanced parentheses
-
 - SELECT without FROM
-
 - INSERT without VALUES
-
 - **UPDATE/DELETE WITHOUT WHERE (dangerous) ⚠️**
-
 - Reserved keywords used as identifiers
 
 Supports multiple languages:
 
 - `.sql` — Raw SQL
-
 - `.java` — Strings: `"SELECT * FROM..."`
-
 - `.js/.ts` — Template literals: const sql = `SELECT...`
-
 - `.py` — Strings: `sql = "SELECT..."`
 
 Displays errors in:
 
 - Problems Panel (native VS Code integration)
-
 - Interactive QuickPick (select for details)
-
 - Output Channel (detailed logs)
 
 ### 🎨 **SQL Formatter (NEW)** — Beautify queries
@@ -93,7 +82,7 @@ Displays errors in:
 - Emoji-based categorization (📖 SELECT, ✏️ CRUD, 🏗️ DDL…)
 - Full logging with timestamps
 - Robust error reporting
-- Customizable keybindings (Ctrl+Alt+S/A/F)
+- Customizable keybindings (Ctrl+Alt+S/A/F/J)
 
 ---
 
@@ -102,40 +91,16 @@ Displays errors in:
 ### From the Marketplace
 
 1. Open VS Code
-
 2. Go to Extensions (`Ctrl+Shift+X`)
-
 3. Search for SQL Helper
-
 4. Click Install or visit:
 
-👉 SQL Helper on Visual Studio Marketplace
-    [Install SQL Helper in Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history)
+👉 SQL Helper on Visual Studio Marketplace  
+[Install SQL Helper](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper&ssr=false#version-history)
 
 ---
 
-## 📣 Promote & Share
-
-Help others discover the extension — a few quick ways to increase visibility:
-
-- ⭐ Star the repo: `https://github.com/marcosgdz03/sql-helper`
-- Share the Marketplace link: `https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper`
-- Tweet / Mastodon post (example):
-
-```
-I just started using SQL Helper for VS Code — 70+ SQL snippets, SQL analysis and formatting built-in. Install: https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper
-#vscode #sql #developer
-```
-
-- Add the badge to your README:
-
-```
-[![SQL Helper in VS Marketplace](https://img.shields.io/visual-studio-marketplace/i/marcosgdz03.sql-helper)](https://marketplace.visualstudio.com/items?itemName=marcosgdz03.sql-helper)
-```
-
-If you'd like, I can generate social images (Twitter card/GitHub social) or a short animated demo GIF to include in the README.
-
-### Desde VSIX (desarrollo)
+### From VSIX (development)
 
 ```bash
 npm install
@@ -148,11 +113,13 @@ code --install-extension sql-helper-*.vsix
 
 ## ⌨️ Quick Keybindings
 
-| Command | Shortcut | Descriptions |
+| Command | Shortcut | Description |
 |---------|----------|-------------|
-| **Insert Snippet** | `Ctrl+Alt+S` | Opens snippet menu |
-| **Analyze SQL** | `Ctrl+Alt+A` | Detects SQL issues |
-| **Format SQL** | `Ctrl+Alt+F` | Reformats query |
+| Insert Snippet | `Ctrl+Alt+S` | Opens snippet menu |
+| Analyze SQL | `Ctrl+Alt+A` | Detects SQL issues |
+| Format SQL | `Ctrl+Alt+F` | Reformats query |
+| Generate Python Project | `Ctrl+Alt+P` | Create Flask/FastAPI project |
+| Generate JavaScript/TypeScript Project | `Ctrl+Alt+J` | Create Express/Nest/Next project |
 
 > **macOS**: Replace `Ctrl` with `Cmd`
 
@@ -169,7 +136,7 @@ code --install-extension sql-helper-*.vsix
 5. Code is inserted automatically
 ```
 
-### 2️⃣ Analize SQL (`Ctrl+Alt+A`)
+### 2️⃣ Analyze SQL (`Ctrl+Alt+A`)
 ```
 1. Open a file containing SQL
 2. Press Ctrl+Alt+A
@@ -186,91 +153,28 @@ code --install-extension sql-helper-*.vsix
 3. Query is formatted automatically
 ```
 
-### SQL Analyzer Examples
-
-#### Detecting Errors
-```bash
-✏️ Press: Ctrl+Alt+S
-🔍 Search: "SELECT JOIN"
+### 4️⃣ Generate Python Project (`Ctrl+Alt+P`)
+```
+1. Press Ctrl+Alt+P
+2. Choose framework (Flask or FastAPI)
+3. Select Python version (3.10, 3.11, 3.12)
+4. Choose database (PostgreSQL, MySQL, SQLite)
+5. Select folder
+6. Project folder with virtualenv, DB module, models, CRUD, and README is generated
 ```
 
-Result:
-```sql
-SELECT a.*, b.*
-FROM table1 a
-LEFT JOIN table2 b ON a.id = b.id
-WHERE a.status = 'active'
-ORDER BY a.date DESC;
+### 5️⃣ Generate JavaScript/TypeScript Project (`Ctrl+Alt+J`)
 ```
-
-#### ☕ Java - CRUD complete
-```bash
-✏️ Press: Ctrl+Alt+S
-🔍 Search: "INSERT"
-📍 Archive: Main.java
-```
-
-Result:
-```java
-public static void insertUser(User user) throws SQLException {
-    String sql = "INSERT INTO users (name, email) VALUES (?, ?)";
-    
-    try (Connection conn = DatabaseConnection.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        
-        ps.setString(1, user.getName());
-        ps.setString(2, user.getEmail());
-        ps.executeUpdate();
-    }
-}
-```
-
-#### 🐍 Python - transaction
-```bash
-✏️ Press: Ctrl+Alt+S
-🔍 Search: "transaction"
-```
-
-Result:
-```python
-def transfer_money(from_id, to_id, amount):
-    conn = mysql.connector.connect(**config)
-    cursor = conn.cursor()
-    
-    try:
-        cursor.execute("UPDATE accounts SET balance = balance - %s WHERE id = %s", 
-                      (amount, from_id))
-        cursor.execute("UPDATE accounts SET balance = balance + %s WHERE id = %s", 
-                      (amount, to_id))
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise e
-    finally:
-        cursor.close()
-        conn.close()
-```
-
-#### 📜 JavaScript - Async/Await
-```bash
-✏️ Press: Ctrl+Alt+S
-🔍 Search: "async SELECT"
-```
-
-Result:
-```javascript
-async function getUserById(userId) {
-    try {
-        const [rows] = await pool.query(
-            "SELECT * FROM users WHERE id = ?", 
-            [userId]
-        );
-        return rows[0] || null;
-    } catch (error) {
-        console.error("Database error:", error);
-        throw error;
-    }
-}
+1. Press Ctrl+Alt+J
+2. Choose framework:
+   - Express.js: Minimalist Node.js backend
+   - NestJS: Full-featured TypeScript backend
+   - Next.js: React-based frontend + backend
+3. Select project folder
+4. Full project scaffolding is generated:
+   - Folder structure
+   - package.json with dependencies
+   - Starter files (index.js, main.ts, app.module.ts, pages/index.js)
 ```
 
 ---
@@ -288,16 +192,11 @@ async function getUserById(userId) {
 ⌨️ Press: Ctrl+Alt+A
 🎯 Result:
    ✗ UPDATE/DELETE SIN WHERE
-   Detectado: "Línea 1 - UPDATE sin WHERE"
-   💡 SSuggestion: Add WHERE to avoid updating all records
-   
-✔️ You can see:
-   - Panel Problems
-   - Interactive Quickpick
-   - Output Channel "SQL Helper"
+   Detected: "Line 1 - UPDATE without WHERE"
+   💡 Suggestion: Add WHERE to avoid updating all records
 ```
 
-### Detecting in java
+### Detecting in Java
 
 ```java
 // queries.java
@@ -305,19 +204,19 @@ String sql = "INSERT INTO users (name) VALUES ('John')" // ❌ Missing ;
 
 ⌨️ Press: Ctrl+Alt+A
 🎯 Result:
-   ✗ FAULT PUNTO Y COMA
-   Detect: "Line 1"
-   💡 Suggest: "Add ; at the of the SQL sequence"
+   ✗ MISSING SEMICOLON
+   Detected: "Line 1"
+   💡 Suggestion: "Add ; at the end of the SQL statement"
 ```
 
-### Format query
+### Format Query
 
 ```bash
 ✏️ Original content:
 SELECT a.id,a.name,b.email FROM users a INNER JOIN profiles b ON a.id=b.user_id WHERE a.status='active' ORDER BY a.created_at DESC LIMIT 10
 
-⌨️ Atajo: Ctrl+Alt+F
-🎯 Resultado formateado:
+⌨️ Press: Ctrl+Alt+F
+🎯 Result:
 SELECT a.id, a.name, b.email
 FROM users a
 INNER JOIN profiles b ON a.id = b.user_id
@@ -328,84 +227,56 @@ LIMIT 10
 
 ---
 
-#### JavaScript
-```javascript
-const [users] = await pool.query("SELECT * FROM users");
-```
+## 💻 Snippet Examples
 
----
-
-## ⌨️ Keybindings
-
-| Command | Shortcut |
-|---------|----------|
-| Insert snippet | `Ctrl+Alt+S` (Windows/Linux) <br> `Cmd+Alt+S` (macOS) |
-
-You can personalize the shortcut in `Preferences: Open Keyboard Shortcuts`
-
----
-
-## 🔍 Ejemplos de Snippets
-
-### SQL - INSERT Múltiple
-```sql
-INSERT INTO table (col1, col2)
-VALUES
-('val1', 'val2'),
-('val1', 'val2'),
-('val1', 'val2');
-```
-
-### SQL - Complicated JOIN
-```sql
-SELECT *
-FROM tabla1
-LEFT JOIN tabla2 ON tabla1.id = tabla2.id
-INNER JOIN tabla3 ON tabla2.id = tabla3.id;
-```
-
-### Java - SELECT CRUD
-```java
-public List<Entity> getAllEntity() throws SQLException {
-    List<Entity> list = new ArrayList<>();
-    String sql = "SELECT * FROM tabla";
+### Python Transaction
+```python
+def transfer_money(from_id, to_id, amount):
+    conn = mysql.connector.connect(**config)
+    cursor = conn.cursor()
     
+    try:
+        cursor.execute("UPDATE accounts SET balance = balance - %s WHERE id = %s", 
+                       (amount, from_id))
+        cursor.execute("UPDATE accounts SET balance = balance + %s WHERE id = %s", 
+                       (amount, to_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+```
+
+### Java Insert
+```java
+public static void insertUser(User user) throws SQLException {
+    String sql = "INSERT INTO users (name, email) VALUES (?, ?)";
+
     try (Connection conn = DatabaseConnection.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()) {
-        
-        while (rs.next()) {
-            Entity obj = new Entity();
-            // mapear campos
-            list.add(obj);
-        }
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setString(1, user.getName());
+        ps.setString(2, user.getEmail());
+        ps.executeUpdate();
     }
-    return list;
 }
 ```
 
-### Python - SQLAlchemy
-```python
-from sqlalchemy.orm import sessionmaker
-
-Session = sessionmaker(bind=engine)
-session = Session()
-
-resultados = session.query(Modelo).all()
-session.close()
-```
-
-### JavaScript - transaction
+### JavaScript Async/Await
 ```javascript
-const conn = await pool.getConnection();
-try {
-    await conn.beginTransaction();
-    await conn.execute("INSERT INTO tabla VALUES (?, ?)", [val1, val2]);
-    await conn.commit();
-} catch (e) {
-    await conn.rollback();
-} finally {
-    conn.release();
+async function getUserById(userId) {
+    try {
+        const [rows] = await pool.query(
+            "SELECT * FROM users WHERE id = ?", 
+            [userId]
+        );
+        return rows[0] || null;
+    } catch (error) {
+        console.error("Database error:", error);
+        throw error;
+    }
 }
 ```
 
@@ -418,27 +289,29 @@ try {
 
 ---
 
-## 🐛 Known Issues
-
-- Some special characters in multiline snippets may require escaping
-- Emoji display depends on system font
-
----
-
 ## 📝 Changelog
 
-### v0.1.0
-- Full refactor to modules
-- Improved logging with output channel
-- 40+ SQL snippets
-- 9+ Java JDBC methods
-- 15+ Python snippets
-- 15+ JavaScript snippets
-- Customizable keybinding
-- Better error handling
+### 0.5.0 - 2025-12-09
+- ✅ Added Python project generation (Flask/FastAPI) with DB modules and CRUD
+- ✅ Added JavaScript/TypeScript project generation (Express/Nest/Next.js)
+- ✅ Updated keybindings (`Ctrl+Alt+P`, `Ctrl+Alt+J`)
+- ✅ Improved README with usage examples
 
-### v0.0.5
-- Initial version with basic snippets
+### 0.1.0 - 2025-12-08
+- ✅ Refactored code into modular structure
+- ✅ Improved logging via Output Channel
+- ✅ 40+ SQL snippets added
+- ✅ 9+ Java JDBC methods
+- ✅ 15+ Python snippets
+- ✅ 15+ JavaScript/TypeScript snippets
+- ✅ Customizable keybindings (Ctrl+Alt+S/A/F)
+- ✅ Enhanced error handling
+- ✅ SQL Analyzer added
+- ✅ SQL Formatter added
+
+### 0.0.5 - 2025-11-20
+- Initial release with basic SQL snippets
+- Basic keybindings for insert snippet
 
 ---
 
@@ -454,12 +327,10 @@ try {
 
 ## 📧 Support
 
-Report bugs or request features here:: [GitHub Issues](https://github.com/marcosgdz03/sql-helper/issues)
+Report bugs or request features here: [GitHub Issues](https://github.com/marcosgdz03/sql-helper/issues)
 
 ---
 
 ## 📄 License
 
 MIT — Free for commercial and personal use
-
----
