@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { chooseDatabase, createBaseFolder } from "../utils/utils";
+import { chooseDatabase } from "../utils/utils";
+import { exec } from "child_process";
 
 type DbType = "PostgreSQL" | "MySQL" | "SQLite";
 
@@ -35,11 +36,33 @@ export async function generatePythonProject(
     framework: string,
     db: DbType
 ): Promise<void> {
+    const dbName = await vscode.window.showInputBox({
+        placeHolder: "Enter database name",
+        value: "mydb"
+    });
+    if (!dbName) return;
+
+    const tablesInput = await vscode.window.showInputBox({
+        placeHolder: "Enter table names separated by commas",
+        value: "users,products"
+    });
+    if (!tablesInput) return;
+
+    const tables = tablesInput.split(",").map(t => t.trim());
+
+    // Generación del proyecto base
     if (framework === "Flask") {
         await createFlaskProject(projectPath, framework, db);
     } else if (framework === "FastAPI") {
         await createFastApiProject(projectPath, framework, db);
     }
+
+    // Crear módulo de DB
+    await createDbModule(projectPath, db, dbName, tables);
+
+    vscode.window.showInformationMessage(
+        `Python project ready with database ${dbName} and tables: ${tables.join(", ")}`
+    );
 }
 
 async function createFlaskProject(folder: string, name: string, db: DbType) {
@@ -53,6 +76,7 @@ async function createFlaskProject(folder: string, name: string, db: DbType) {
 
     const appPy = `
 from flask import Flask
+from db import init_db
 ${dbImports[db]}
 
 app = Flask(__name__)
@@ -62,6 +86,7 @@ def home():
     return "Flask project '${name}' working!"
 
 if __name__ == "__main__":
+    init_db()  # Crea DB y tablas al iniciar
     app.run(debug=True)
 `;
 
@@ -73,7 +98,7 @@ if __name__ == "__main__":
         `flask
 ${db === "PostgreSQL" ? "psycopg2" :
             db === "MySQL" ? "mysql-connector-python" :
-                db === "SQLite" ? "" : ""}`
+                db === "SQLite" ? "aiosqlite" : ""}`
     );
 
     fs.writeFileSync(
@@ -93,9 +118,14 @@ async function createFastApiProject(folder: string, name: string, db: DbType) {
 
     const mainPy = `
 from fastapi import FastAPI
+from db import init_db
 ${dbImports[db]}
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    await init_db()  # Crea DB y tablas al iniciar
 
 @app.get("/")
 async def root():
@@ -126,4 +156,57 @@ uvicorn app.main:app --reload
 \`\`\`
 `
     );
+}
+
+// Crear módulo db.py con conexión y creación de tablas
+async function createDbModule(projectPath: string, db: DbType, dbName: string, tables: string[]) {
+    const dbFile = path.join(projectPath, "db.py");
+
+    let code = "";
+    if (db === "PostgreSQL") {
+        code = `
+import psycopg2
+from psycopg2 import sql
+
+def init_db():
+    conn = psycopg2.connect(dbname='postgres', user='postgres', password='password', host='localhost')
+    conn.autocommit = True
+    cur = conn.cursor()
+    cur.execute("CREATE DATABASE ${dbName}")
+    conn.close()
+
+    conn = psycopg2.connect(dbname='${dbName}', user='postgres', password='password', host='localhost')
+    cur = conn.cursor()
+    ${tables.map(t => `cur.execute("CREATE TABLE IF NOT EXISTS ${t} (id SERIAL PRIMARY KEY, name VARCHAR(255));")`).join("\n    ")}
+    conn.commit()
+    conn.close()
+`;
+    } else if (db === "MySQL") {
+        code = `
+import mysql.connector
+
+def init_db():
+    conn = mysql.connector.connect(user='root', password='password', host='127.0.0.1')
+    cur = conn.cursor()
+    cur.execute("CREATE DATABASE IF NOT EXISTS ${dbName}")
+    conn.database = '${dbName}'
+    ${tables.map(t => `cur.execute("CREATE TABLE IF NOT EXISTS ${t} (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));")`).join("\n    ")}
+    conn.commit()
+    conn.close()
+`;
+    } else {
+        // SQLite
+        code = `
+import sqlite3
+
+def init_db():
+    conn = sqlite3.connect("${dbName}.sqlite")
+    cur = conn.cursor()
+    ${tables.map(t => `cur.execute("CREATE TABLE IF NOT EXISTS ${t} (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);")`).join("\n    ")}
+    conn.commit()
+    conn.close()
+`;
+    }
+
+    fs.writeFileSync(dbFile, code);
 }
