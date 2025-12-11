@@ -12,7 +12,7 @@ Generate **production-ready code** in seconds — from complex SQL queries to fu
 
 ---
 
-## 🎯 Características Principales
+## 🎯 Main features
 
 ### 📊 **Snippets SQL** (40+ templates)
 - **Selection**: Basic SELECT, WHERE, LIMIT, OFFSET, ORDER BY, GROUP BY, DISTINCT, JOINs
