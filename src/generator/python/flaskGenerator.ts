@@ -95,3 +95,4 @@ def init_db():
 
     fs.writeFileSync(dbFile, code);
 }
+    
