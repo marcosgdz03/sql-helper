@@ -14,7 +14,7 @@ export async function showProjectGenerator() {
         placeHolder: "Choose a language for your project"
     });
 
-    if (!selectedLanguage) return;
+    if (!selectedLanguage) {return;}
 
     switch (selectedLanguage.label) {
         case "Java":

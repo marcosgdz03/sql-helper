@@ -23,8 +23,8 @@ export async function generateQuarkusProject(
     fs.writeFileSync(path.join(resources, "application.properties"), generateQuarkusConfig(db, dbDetails.dbName));
     fs.writeFileSync(path.join(resources, "init.sql"), generateInitSql(dbDetails.dbName, dbDetails.tables, db));
 
-    if (buildTool === "maven") fs.writeFileSync(path.join(projectPath, "pom.xml"), `<!-- POM for Quarkus ${version} -->`);
-    else fs.writeFileSync(path.join(projectPath, "build.gradle"), `// Gradle for Quarkus ${version}`);
+    if (buildTool === "maven") {fs.writeFileSync(path.join(projectPath, "pom.xml"), `<!-- POM for Quarkus ${version} -->`);}
+    else {fs.writeFileSync(path.join(projectPath, "build.gradle"), `// Gradle for Quarkus ${version}`);}
 
     console.log(`Quarkus project generated at ${projectPath}`);
 }

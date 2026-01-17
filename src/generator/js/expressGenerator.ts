@@ -16,7 +16,7 @@ export async function selectFolder(): Promise<string | null> {
 
 function ensureDir(parent: string, name: string) {
     const dirPath = path.join(parent, name);
-    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath);
+    if (!fs.existsSync(dirPath)) {fs.mkdirSync(dirPath);}
 }
 
 function writeFile(location: string, fileName: string, content: string) {
@@ -29,7 +29,7 @@ function writeFile(location: string, fileName: string, content: string) {
  */
 export async function generateExpressProject() {
     const folder = await selectFolder();
-    if (!folder) return;
+    if (!folder) {return;}
 
     writeFile(folder, "package.json", getExpressPackage());
     writeFile(folder, "index.js", getExpressIndex());

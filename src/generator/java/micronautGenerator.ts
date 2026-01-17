@@ -23,8 +23,8 @@ export async function generateMicronautProject(
     fs.writeFileSync(path.join(resources, "application.yml"), generateMicronautConfig(db, dbDetails.dbName));
     fs.writeFileSync(path.join(resources, "init.sql"), generateInitSql(dbDetails.dbName, dbDetails.tables, db));
 
-    if (buildTool === "maven") fs.writeFileSync(path.join(projectPath, "pom.xml"), `<!-- POM for Micronaut ${version} -->`);
-    else fs.writeFileSync(path.join(projectPath, "build.gradle"), `// Gradle for Micronaut ${version}`);
+    if (buildTool === "maven") {fs.writeFileSync(path.join(projectPath, "pom.xml"), `<!-- POM for Micronaut ${version} -->`);}
+    else {fs.writeFileSync(path.join(projectPath, "build.gradle"), `// Gradle for Micronaut ${version}`);}
 
     console.log(`Micronaut project generated at ${projectPath}`);
 }

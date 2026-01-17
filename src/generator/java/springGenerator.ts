@@ -23,8 +23,8 @@ export async function generateSpringProject(
     fs.writeFileSync(path.join(resources, "application.properties"), generateSpringProperties(db, dbDetails.dbName));
     fs.writeFileSync(path.join(resources, "init.sql"), generateInitSql(dbDetails.dbName, dbDetails.tables, db));
 
-    if (buildTool === "maven") fs.writeFileSync(path.join(projectPath, "pom.xml"), `<!-- POM for Spring Boot ${version} -->`);
-    else fs.writeFileSync(path.join(projectPath, "build.gradle"), `// Gradle for Spring Boot ${version}`);
+    if (buildTool === "maven") {fs.writeFileSync(path.join(projectPath, "pom.xml"), `<!-- POM for Spring Boot ${version} -->`);}
+    else {fs.writeFileSync(path.join(projectPath, "build.gradle"), `// Gradle for Spring Boot ${version}`);}
 
     console.log(`Spring Boot project generated at ${projectPath}`);
 }

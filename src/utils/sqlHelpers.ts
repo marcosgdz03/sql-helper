@@ -1,42 +1,38 @@
 import * as vscode from 'vscode';
 import { logInfo, logError } from './helpers';
-
-interface SqlError {
-    type: string;
-    description: string;
-    suggestion: string;
-    line?: number;
-}
+import { SqlError, SqlDialect, SqlAnalysisResult } from '../types';
+import { Validator } from '../core/Validator';
 
 let diagnosticCollection: vscode.DiagnosticCollection | null = null;
 
-export type SqlDialect = 'mysql' | 'postgresql';
-
 export class SqlHelper {
 
-    // -------------------- ANALIZAR SQL --------------------
+    /**
+     * Analiza SQL en busca de errores
+     */
     static async analyzeSql(editor: vscode.TextEditor, dialect: SqlDialect): Promise<void> {
         const document = editor.document;
         const text = document.getText();
 
-        if (!text || text.trim() === '') {
+        if (!Validator.validateDocumentNotEmpty(text)) {
             vscode.window.showWarningMessage('No SQL queries found in the file');
             logInfo(`SQL analysis (${dialect}): no SQL queries found`);
             return;
         }
 
-        const errors = this.detectErrors(text, dialect);
+        const result = this.detectErrors(text, dialect);
 
-        if (errors.length === 0) {
+        if (result.errors.length === 0 && result.warnings.length === 0) {
             vscode.window.showInformationMessage(`✅ No common SQL issues detected for ${dialect.toUpperCase()}`);
             logInfo(`SQL analysis (${dialect}): no errors detected`);
             this.clearDiagnostics(document.uri);
             return;
         }
 
-        this.publishDiagnostics(document, errors, dialect);
+        this.publishDiagnostics(document, result, dialect);
 
-        const errorItems = errors.map(err => ({
+        const allIssues = [...result.errors, ...result.warnings];
+        const errorItems = allIssues.map(err => ({
             label: `$(error) ${err.type}`,
             detail: err.description,
             description: err.suggestion,
@@ -44,7 +40,7 @@ export class SqlHelper {
         }));
 
         const selected = await vscode.window.showQuickPick(errorItems, {
-            placeHolder: `Found ${errors.length} SQL error(s). Select one to view details`
+            placeHolder: `Found ${allIssues.length} SQL issue(s). Select one to view details`
         });
 
         if (selected) {
@@ -52,10 +48,14 @@ export class SqlHelper {
         }
     }
 
-    // -------------------- DETECCIÓN DE ERRORES --------------------
-    private static detectErrors(text: string, dialect: SqlDialect): SqlError[] {
+    /**
+     * Detecta errores en sentencias SQL
+     */
+    private static detectErrors(text: string, dialect: SqlDialect): SqlAnalysisResult {
         const errors: SqlError[] = [];
-        const cleanText = text.replace(/--.*$/gm, '');
+        const warnings: SqlError[] = [];
+
+        const cleanText = text.replace(/--.*$/gm, ''); // Remover comentarios
         const statements = cleanText.split(';');
         let lineOffset = 0;
 
@@ -73,9 +73,10 @@ export class SqlHelper {
             if (upperStmt.includes('SELECT') && !upperStmt.includes('FROM')) {
                 errors.push({
                     type: 'SELECT without FROM',
-                    description: `Statement starting at line ${startLine}: ${trimmedStmt}`,
+                    description: `Statement starting at line ${startLine}: ${trimmedStmt.substring(0, 50)}...`,
                     suggestion: 'Most SELECT queries require a FROM clause',
-                    line: startLine
+                    line: startLine,
+                    severity: 'error'
                 });
             }
 
@@ -83,116 +84,158 @@ export class SqlHelper {
             if (upperStmt.includes('INSERT INTO') && !upperStmt.includes('VALUES')) {
                 errors.push({
                     type: 'INSERT without VALUES',
-                    description: `Statement starting at line ${startLine}: ${trimmedStmt}`,
+                    description: `Statement starting at line ${startLine}`,
                     suggestion: 'INSERT INTO table (columns) VALUES (values);',
-                    line: startLine
+                    line: startLine,
+                    severity: 'error'
                 });
             }
 
-            // UPDATE sin WHERE
+            // UPDATE sin WHERE - CRÍTICO
             if (upperStmt.includes('UPDATE') && !upperStmt.includes('WHERE')) {
                 errors.push({
                     type: '⚠️ UPDATE without WHERE',
-                    description: `Statement starting at line ${startLine}: ${trimmedStmt}`,
-                    suggestion: 'UPDATE without WHERE will affect ALL rows',
-                    line: startLine
+                    description: `Statement starting at line ${startLine}: ${trimmedStmt.substring(0, 50)}...`,
+                    suggestion: 'UPDATE without WHERE will affect ALL rows - DANGEROUS!',
+                    line: startLine,
+                    severity: 'error'
                 });
             }
 
-            // DELETE sin WHERE
+            // DELETE sin WHERE - CRÍTICO
             if (upperStmt.includes('DELETE FROM') && !upperStmt.includes('WHERE')) {
                 errors.push({
                     type: '🔴 DELETE without WHERE',
-                    description: `Statement starting at line ${startLine}: ${trimmedStmt}`,
-                    suggestion: 'DELETE without WHERE will remove all rows',
-                    line: startLine
+                    description: `Statement starting at line ${startLine}`,
+                    suggestion: 'DELETE without WHERE will remove all rows - DANGEROUS!',
+                    line: startLine,
+                    severity: 'error'
                 });
             }
 
             // Paréntesis balanceados
-            const openParen = (trimmedStmt.match(/\(/g) || []).length;
-            const closeParen = (trimmedStmt.match(/\)/g) || []).length;
-            if (openParen !== closeParen) {
-                errors.push({
+            if (!Validator.areParenthesesBalanced(trimmedStmt)) {
+                const openParen = Validator.countOccurrences(trimmedStmt, '(');
+                const closeParen = Validator.countOccurrences(trimmedStmt, ')');
+                warnings.push({
                     type: 'Unbalanced parentheses',
-                    description: `Statement starting at line ${startLine}: Open: ${openParen}, Close: ${closeParen}`,
+                    description: `Line ${startLine}: Open: ${openParen}, Close: ${closeParen}`,
                     suggestion: 'Ensure all parentheses are balanced',
-                    line: startLine
+                    line: startLine,
+                    severity: 'warning'
                 });
             }
 
-            // Comillas simples balanceadas
-            const singleQuotes = (trimmedStmt.match(/'/g) || []).length;
-            if (singleQuotes % 2 !== 0) {
-                errors.push({
+            // Comillas balanceadas
+            if (!Validator.areQuotesBalanced(trimmedStmt)) {
+                warnings.push({
                     type: 'Unclosed quote',
-                    description: `Statement starting at line ${startLine}: ${trimmedStmt}`,
+                    description: `Statement starting at line ${startLine}`,
                     suggestion: 'Ensure all single quotes are balanced',
-                    line: startLine
+                    line: startLine,
+                    severity: 'warning'
                 });
             }
 
             // Punto y coma final
-            if (!text.includes(trimmedStmt + ';')) {
-                errors.push({
+            if (!text.substring(0, text.indexOf(trimmedStmt) + trimmedStmt.length).endsWith(';')) {
+                warnings.push({
                     type: 'Missing semicolon',
-                    description: `Statement starting at line ${startLine}: ${trimmedStmt}`,
+                    description: `Statement starting at line ${startLine}`,
                     suggestion: 'SQL statements should end with ;',
-                    line: startLine
+                    line: startLine,
+                    severity: 'warning'
                 });
             }
 
             lineOffset += (stmt.match(/\n/g) || []).length + 1;
         });
 
-        return errors;
+        return {
+            errors,
+            warnings,
+            isValid: errors.length === 0
+        };
     }
 
-    // -------------------- FORMATEO --------------------
+    /**
+     * Formatea SQL con saltos de línea apropiados
+     */
     static async formatSql(editor: vscode.TextEditor, dialect?: SqlDialect): Promise<void> {
-    const document = editor.document;
-    const selection = editor.selection;
-    const text = selection.isEmpty ? document.getText() : document.getText(selection);
+        const document = editor.document;
+        const selection = editor.selection;
+        const text = selection.isEmpty ? document.getText() : document.getText(selection);
 
-    // Palabras clave por defecto
-    let keywords = [
-        'SELECT', 'FROM', 'WHERE', 'JOIN', 'ON', 'ORDER BY', 'GROUP BY',
-        'HAVING', 'LIMIT', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM'
-    ];
+        const keywords = this.getKeywordsForDialect(dialect);
+        let formatted = text;
 
-    // Añadir keywords específicas por dialecto
-    if (dialect === 'mysql') {
-        keywords.push('AUTO_INCREMENT', 'ENGINE', 'CHARSET');
-    } else if (dialect === 'postgresql') {
-        keywords.push('SERIAL', 'BIGSERIAL', 'RETURNING');
+        keywords.forEach(keyword => {
+            const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+            formatted = formatted.replace(regex, `\n${keyword}`);
+        });
+
+        formatted = formatted
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .join('\n');
+
+        const range = selection.isEmpty
+            ? new vscode.Range(document.positionAt(0), document.positionAt(text.length))
+            : selection;
+
+        await editor.edit(editBuilder => {
+            editBuilder.replace(range, formatted);
+        });
+
+        vscode.window.showInformationMessage(`✅ ${dialect ? dialect.toUpperCase() : 'SQL'} formatted successfully`);
     }
 
-    let formatted = text;
-    keywords.forEach(keyword => {
-        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-        formatted = formatted.replace(regex, `\n${keyword}`);
-    });
+    /**
+     * Obtiene las palabras clave para formatear según el dialecto
+     */
+    private static getKeywordsForDialect(dialect?: SqlDialect): string[] {
+        const baseKeywords = [
+            'SELECT', 'FROM', 'WHERE', 'JOIN', 'ON', 'ORDER BY', 'GROUP BY',
+            'HAVING', 'LIMIT', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM',
+            'CREATE', 'DROP', 'ALTER', 'AND', 'OR', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN'
+        ];
 
-    formatted = formatted
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0)
-        .join('\n');
+        if (dialect === SqlDialect.MYSQL) {
+            baseKeywords.push('AUTO_INCREMENT', 'ENGINE', 'CHARSET', 'COLLATE');
+        } else if (dialect === SqlDialect.POSTGRESQL) {
+            baseKeywords.push('SERIAL', 'BIGSERIAL', 'RETURNING', 'LANGUAGE');
+        }
 
-    const range = selection.isEmpty
-        ? new vscode.Range(document.positionAt(0), document.positionAt(text.length))
-        : selection;
+        return baseKeywords;
+    }
 
-    await editor.edit(editBuilder => {
-        editBuilder.replace(range, formatted);
-    });
+    /**
+     * Aplica correcciones automáticas al SQL
+     */
+    static async applyAutoFix(editor: vscode.TextEditor, dialect: SqlDialect): Promise<void> {
+        const document = editor.document;
+        const text = document.getText();
+        const fixed = this.getAutoFixedText(text, dialect);
 
-    vscode.window.showInformationMessage(`✅ ${dialect ? dialect.toUpperCase() : 'SQL'} formatted successfully`);
-}
+        if (!fixed || fixed === text) {
+            vscode.window.showInformationMessage('✅ No fixes needed. SQL is already correct.');
+            return;
+        }
 
+        const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(text.length));
+        await editor.edit(editBuilder => {
+            editBuilder.replace(fullRange, fixed);
+        });
 
-    // -------------------- AUTO-FIX GENERAL --------------------
-    static async getAutoFix(editor: vscode.TextEditor, text: string, dialect: SqlDialect): Promise<string | null> {
+        vscode.window.showInformationMessage(`✅ All ${dialect.toUpperCase()} SQL issues have been auto-fixed!`);
+        logInfo(`Applied auto-fix to ${dialect.toUpperCase()} SQL in editor.`);
+    }
+
+    /**
+     * Genera el texto corregido automáticamente
+     */
+    private static getAutoFixedText(text: string, dialect: SqlDialect): string {
         const statements = text.split(';');
         let newText = '';
 
@@ -203,93 +246,83 @@ export class SqlHelper {
                 return;
             }
 
-            // Comillas desbalanceadas
-            const singleQuotes = (trimmedStmt.match(/'/g) || []).length;
-            if (singleQuotes % 2 !== 0) trimmedStmt += "'";
-
-            // Paréntesis desbalanceados
-            const openParen = (trimmedStmt.match(/\(/g) || []).length;
-            const closeParen = (trimmedStmt.match(/\)/g) || []).length;
-            if (openParen > closeParen) trimmedStmt += ')'.repeat(openParen - closeParen);
-
-            // Punto y coma
-            if (!trimmedStmt.endsWith(';')) trimmedStmt += ';';
-
-            // Reglas de dialecto
-            if (/CREATE\s+TABLE/i.test(trimmedStmt)) {
-                if (dialect === 'postgresql') {
-                    trimmedStmt = trimmedStmt.replace(
-                        /(\b\w+\b)\s+(serial|primary|key|integer|int|varchar|text)?/gi,
-                        (_, colName, type) => {
-                            let finalType = type?.toUpperCase() || 'INTEGER';
-                            if (/SERIAL/i.test(finalType)) finalType = 'SERIAL';
-                            if (/PRIMARY/i.test(finalType)) finalType = 'INTEGER PRIMARY KEY';
-                            if (/INTGER/i.test(finalType) || /INT/i.test(finalType)) finalType = 'INTEGER';
-                            if (/VARCHAR/i.test(finalType)) finalType = 'VARCHAR(255)';
-                            if (/TEXT/i.test(finalType)) finalType = 'TEXT';
-                            return `${colName} ${finalType}`;
-                        }
-                    );
-                } else if (dialect === 'mysql') {
-                    trimmedStmt = trimmedStmt.replace(
-                        /(\b\w+\b)\s+(int|integer|varchar|text|primary)?/gi,
-                        (_, colName, type) => {
-                            let finalType = type?.toUpperCase() || 'INT';
-                            if (/PRIMARY/i.test(finalType)) finalType = 'INT PRIMARY KEY';
-                            if (/INT/i.test(finalType)) finalType = 'INT';
-                            if (/VARCHAR/i.test(finalType)) finalType = 'VARCHAR(255)';
-                            if (/TEXT/i.test(finalType)) finalType = 'TEXT';
-                            return `${colName} ${finalType}`;
-                        }
-                    );
+            // Corregir comillas desbalanceadas
+            if (!Validator.areQuotesBalanced(trimmedStmt)) {
+                const singleQuotes = Validator.countOccurrences(trimmedStmt, "'");
+                if (singleQuotes % 2 !== 0) {
+                    trimmedStmt += "'";
                 }
+            }
+
+            // Corregir paréntesis desbalanceados
+            if (!Validator.areParenthesesBalanced(trimmedStmt)) {
+                const openParen = Validator.countOccurrences(trimmedStmt, '(');
+                const closeParen = Validator.countOccurrences(trimmedStmt, ')');
+                if (openParen > closeParen) {
+                    trimmedStmt += ')'.repeat(openParen - closeParen);
+                }
+            }
+
+            // Agregar punto y coma si falta
+            if (!trimmedStmt.endsWith(';')) {
+                trimmedStmt += ';';
+            }
+
+            // Normalizar tipos según dialecto
+            if (/CREATE\s+TABLE/i.test(trimmedStmt)) {
+                trimmedStmt = this.normalizeDataTypes(trimmedStmt, dialect);
             }
 
             newText += trimmedStmt + '\n';
         });
 
-        return newText !== text ? newText : null;
+        return newText;
     }
 
-    static async applyAutoFix(editor: vscode.TextEditor, dialect: SqlDialect): Promise<void> {
-        const document = editor.document;
-        const text = document.getText();
-        const fixed = await this.getAutoFix(editor, text, dialect);
-
-        if (!fixed) {
-            vscode.window.showInformationMessage('✅ No fixes needed. SQL is already correct.');
-            return;
+    /**
+     * Normaliza los tipos de datos según el dialecto SQL
+     */
+    private static normalizeDataTypes(stmt: string, dialect: SqlDialect): string {
+        if (dialect === SqlDialect.POSTGRESQL) {
+            return stmt
+                .replace(/\bINTEGER\s+AUTO_INCREMENT\b/gi, 'SERIAL')
+                .replace(/\bINT\s+AUTO_INCREMENT\b/gi, 'SERIAL')
+                .replace(/\bVARCHAR\b(?!\s*\()/gi, 'VARCHAR(255)');
+        } else if (dialect === SqlDialect.MYSQL) {
+            return stmt
+                .replace(/\bSERIAL\b/gi, 'INT AUTO_INCREMENT')
+                .replace(/\bBIGSERIAL\b/gi, 'BIGINT AUTO_INCREMENT')
+                .replace(/\bVARCHAR\b(?!\s*\()/gi, 'VARCHAR(255)');
         }
-
-        const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(text.length));
-
-        await editor.edit(editBuilder => {
-            editBuilder.replace(fullRange, fixed);
-        });
-
-        vscode.window.showInformationMessage(`✅ All ${dialect.toUpperCase()} SQL issues have been auto-fixed!`);
-        logInfo(`Applied auto-fix to ${dialect.toUpperCase()} SQL in editor.`);
+        return stmt;
     }
 
+    /**
+     * Muestra los detalles de un error detectado
+     */
     private static showErrorDetails(error: SqlError): void {
         const message = `
-📋 **${error.type}**
+📋 ${error.type}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📍 ${error.description}
 
-💡 **Fix:**
+💡 Suggested fix:
 ${error.suggestion}
         `.trim();
         vscode.window.showInformationMessage(message, { modal: true });
         logInfo(`Detected SQL error: ${error.type}`);
     }
 
-    private static publishDiagnostics(document: vscode.TextDocument, errors: SqlError[], dialect: SqlDialect): void {
+    /**
+     * Publica diagnósticos en el panel de problemas
+     */
+    private static publishDiagnostics(document: vscode.TextDocument, result: SqlAnalysisResult, dialect: SqlDialect): void {
         if (!diagnosticCollection) {
             diagnosticCollection = vscode.languages.createDiagnosticCollection('sql-helper');
         }
 
-        const diagnostics: vscode.Diagnostic[] = errors.map(error => {
+        const allIssues = [...result.errors, ...result.warnings];
+        const diagnostics: vscode.Diagnostic[] = allIssues.map(error => {
             const lineNum = (error.line ?? 1) - 1;
             const line = document.lineAt(Math.min(lineNum, document.lineCount - 1));
             const range = new vscode.Range(
@@ -297,10 +330,11 @@ ${error.suggestion}
                 new vscode.Position(line.lineNumber, line.text.length)
             );
 
+            const severity = error.severity === 'error' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning;
             const diagnostic = new vscode.Diagnostic(
                 range,
                 `[${dialect.toUpperCase()}] ${error.type}: ${error.description}`,
-                vscode.DiagnosticSeverity.Error
+                severity
             );
             diagnostic.code = 'sql-helper';
             diagnostic.source = 'SQL Helper';
@@ -311,7 +345,12 @@ ${error.suggestion}
         logInfo(`Published ${diagnostics.length} ${dialect.toUpperCase()} SQL issues to the Problems panel`);
     }
 
+    /**
+     * Limpia los diagnósticos de un archivo
+     */
     private static clearDiagnostics(uri: vscode.Uri): void {
-        if (diagnosticCollection) diagnosticCollection.delete(uri);
+        if (diagnosticCollection) {
+            diagnosticCollection.delete(uri);
+        }
     }
 }

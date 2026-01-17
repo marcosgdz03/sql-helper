@@ -15,19 +15,19 @@ export async function choosePythonFramework() {
     const framework = await vscode.window.showQuickPick(frameworks, {
         placeHolder: "Choose a Python framework"
     });
-    if (!framework) return;
+    if (!framework) {return;}
 
     const pyVersion = await vscode.window.showQuickPick(
         [{ label: "3.10" }, { label: "3.11" }, { label: "3.12" }],
         { placeHolder: "Choose Python version" }
     );
-    if (!pyVersion) return;
+    if (!pyVersion) {return;}
 
     const db = await chooseDatabase();
-    if (!db) return;
+    if (!db) {return;}
 
     const folderUri = await vscode.window.showOpenDialog({ canSelectFolders: true });
-    if (!folderUri) return;
+    if (!folderUri) {return;}
 
     const projectPath = path.join(folderUri[0].fsPath, framework.label.toLowerCase());
     fs.mkdirSync(projectPath, { recursive: true });
@@ -47,13 +47,13 @@ export async function generatePythonProject(
         placeHolder: "Enter database name",
         value: "mydb"
     });
-    if (!dbName) return;
+    if (!dbName) {return;}
 
     const tablesInput = await vscode.window.showInputBox({
         placeHolder: "Enter table names separated by commas",
         value: "users,products"
     });
-    if (!tablesInput) return;
+    if (!tablesInput) {return;}
 
     const tables = tablesInput.split(",").map(t => t.trim());
 

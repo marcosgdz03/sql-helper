@@ -14,7 +14,7 @@ export async function chooseJsFramework() {
     ];
 
     const selected = await vscode.window.showQuickPick(frameworks, { placeHolder: "Choose a JavaScript/TypeScript framework" });
-    if (!selected) return;
+    if (!selected) {return;}
 
     switch (selected.label) {
         case "Express.js": await generateExpressProject(); break;

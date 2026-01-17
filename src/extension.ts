@@ -6,205 +6,171 @@ import { showPythonSnippets } from './snippets/pythonSnippets';
 import { showJsSnippets } from './snippets/jsSnippets';
 import { showProjectGenerator } from './snippets/generatorSnippets';
 
-
 import {
     getActiveEditor,
     detectLanguage,
     pickSnippetType,
     showError,
-    showInfo,
-    logInfo,
     logError
 } from './utils/helpers';
 
-import { SqlHelper, SqlDialect } from './utils/sqlHelpers';
+import { SqlHelper } from './utils/sqlHelpers';
+import { CommandManager, Validator, Logger, Config } from './core';
+import { SqlDialect } from './types';
 
 const EXTENSION_NAME = 'SQL Helper';
 
 export function activate(context: vscode.ExtensionContext) {
-    logInfo(`${EXTENSION_NAME} activated`);
+    // Inicializar logger y configuración
+    Logger.initialize(EXTENSION_NAME);
+    Config.reload();
+    Logger.info(`${EXTENSION_NAME} activated`);
 
-    // =====================================================
-    // 🔹 COMANDO: INSERTAR SNIPPET
-    // =====================================================
-    const insertSnippetCommand = vscode.commands.registerCommand(
-        'sql-helper.insertSnippet',
-        async () => {
-            try {
-                const editor = getActiveEditor();
-                if (!editor) return;
+    const commandManager = new CommandManager();
 
-                let mode = detectLanguage(editor);
+    // Comando: Insertar Snippet
+    commandManager.registerCommand({
+        id: 'sql-helper.insertSnippet',
+        title: 'SQL Helper: Insert snippet',
+        handler: async () => {
+            const editor = getActiveEditor();
+            if (!editor) {
+                return;
+            }
 
+            let mode = detectLanguage(editor);
+            if (!mode) {
+                mode = await pickSnippetType();
                 if (!mode) {
-                    mode = await pickSnippetType();
-                    if (!mode) return;
-                }
-
-                logInfo(`Selected snippet type: ${mode}`);
-
-                switch (mode) {
-                    case 'sql':
-                        await showSqlSnippets(editor);
-                        break;
-                    case 'java':
-                        await showJavaSnippets(editor);
-                        break;
-                    case 'python':
-                        await showPythonSnippets(editor);
-                        break;
-                    case 'javascript':
-                        await showJsSnippets(editor);
-                        break;
-                    default:
-                        showError(`Unsupported language: ${mode}`);
-                }
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-                logError(`insertSnippet error: ${msg}`);
-                showError('Unexpected error. Check the console for details.');
-            }
-        }
-    );
-
-    // =====================================================
-    // 🔹 COMANDO: ANALIZAR SQL
-    // =====================================================
-    const analyzeSqlCommand = vscode.commands.registerCommand(
-        'sql-helper.analyzeSql',
-        async () => {
-            try {
-                const editor = getActiveEditor();
-                if (!editor) return;
-
-                const valid = ['sql', 'java', 'javascript', 'typescript', 'python'];
-
-                if (!valid.includes(editor.document.languageId)) {
-                    showError('Works with SQL, Java, JavaScript, TypeScript and Python');
                     return;
                 }
+            }
 
-                const choice = await vscode.window.showQuickPick(
-                    ['MySQL', 'PostgreSQL'],
-                    { placeHolder: 'Select SQL dialect' }
-                );
-                if (!choice) return;
+            Logger.info(`Selected snippet type: ${mode}`);
 
-                logInfo(`Analyzing SQL: ${choice}`);
+            const snippetHandlers: Record<string, (editor: vscode.TextEditor) => Promise<void>> = {
+                'sql': showSqlSnippets,
+                'java': showJavaSnippets,
+                'python': showPythonSnippets,
+                'javascript': showJsSnippets
+            };
 
-                const dialect = choice.toLowerCase() as SqlDialect;
+            const handler = snippetHandlers[mode];
+            if (handler) {
+                await handler(editor);
+            } else {
+                showError(`Unsupported language: ${mode}`);
+            }
+        }
+    }, context);
+
+    // Comando: Analizar SQL
+    commandManager.registerCommand({
+        id: 'sql-helper.analyzeSql',
+        title: 'SQL Helper: Analyze SQL',
+        handler: async () => {
+            const editor = Validator.requireActiveEditor();
+            if (!editor) {
+                return;
+            }
+
+            if (!Validator.isSqlLanguage(editor.document.languageId)) {
+                showError('Works with SQL, Java, JavaScript, TypeScript and Python');
+                return;
+            }
+
+            const choice = await vscode.window.showQuickPick(
+                ['MySQL', 'PostgreSQL'],
+                { placeHolder: 'Select SQL dialect' }
+            );
+            if (!choice) {
+                return;
+            }
+
+            Logger.info(`Analyzing SQL: ${choice}`);
+
+            const dialect = Validator.parseSqlDialect(choice);
+            if (dialect) {
                 await SqlHelper.analyzeSql(editor, dialect);
-
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-                logError(`analyzeSql error: ${msg}`);
-                showError('Error analyzing SQL.');
             }
         }
-    );
+    }, context);
 
-    // =====================================================
-    // 🔹 COMANDO: FORMATEAR SQL
-    // =====================================================
-    const formatSqlCommand = vscode.commands.registerCommand(
-        'sql-helper.formatSql',
-        async () => {
-            try {
-                const editor = getActiveEditor();
-                if (!editor) return;
+    // Comando: Formatear SQL
+    commandManager.registerCommand({
+        id: 'sql-helper.formatSql',
+        title: 'SQL Helper: Format SQL',
+        handler: async () => {
+            const editor = Validator.requireActiveEditor();
+            if (!editor) {
+                return;
+            }
 
-                const valid = ['sql', 'java', 'javascript', 'typescript', 'python'];
+            if (!Validator.isSqlLanguage(editor.document.languageId)) {
+                showError('Works with SQL, Java, JavaScript, TypeScript and Python');
+                return;
+            }
 
-                if (!valid.includes(editor.document.languageId)) {
-                    showError('Works with SQL, Java, JavaScript, TypeScript and Python');
-                    return;
-                }
+            const choice = await vscode.window.showQuickPick(
+                ['MySQL', 'PostgreSQL'],
+                { placeHolder: 'Select SQL dialect' }
+            );
+            if (!choice) {
+                return;
+            }
 
-                const choice = await vscode.window.showQuickPick(
-                    ['MySQL', 'PostgreSQL'],
-                    { placeHolder: 'Select SQL dialect' }
-                );
-                if (!choice) return;
+            Logger.info(`Formatting SQL: ${choice}`);
 
-                logInfo(`Formatting SQL: ${choice}`);
-
-                const dialect = choice.toLowerCase() as SqlDialect;
+            const dialect = Validator.parseSqlDialect(choice);
+            if (dialect) {
                 await SqlHelper.formatSql(editor, dialect);
-
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-                logError(`formatSql error: ${msg}`);
-                showError('Error formatting SQL.');
             }
         }
-    );
+    }, context);
 
-    // =====================================================
-    // 🔹 COMANDO: AUTO-FIX SQL
-    // =====================================================
-    const autoFixSqlCommand = vscode.commands.registerCommand(
-        'sql-helper.autoFix',
-        async () => {
-            try {
-                const editor = getActiveEditor();
-                if (!editor) return;
+    // Comando: Auto-fix SQL
+    commandManager.registerCommand({
+        id: 'sql-helper.autoFix',
+        title: 'SQL Helper: Auto-fix SQL',
+        handler: async () => {
+            const editor = Validator.requireActiveEditor();
+            if (!editor) {
+                return;
+            }
 
-                const valid = ['sql', 'java', 'javascript', 'typescript', 'python'];
+            if (!Validator.isSqlLanguage(editor.document.languageId)) {
+                showError('Works with SQL, Java, JavaScript, TypeScript and Python');
+                return;
+            }
 
-                if (!valid.includes(editor.document.languageId)) {
-                    showError('Works with SQL, Java, JavaScript, TypeScript and Python');
-                    return;
-                }
+            const choice = await vscode.window.showQuickPick(
+                ['MySQL', 'PostgreSQL'],
+                { placeHolder: 'Select SQL dialect' }
+            );
+            if (!choice) {
+                return;
+            }
 
-                const choice = await vscode.window.showQuickPick(
-                    ['MySQL', 'PostgreSQL'],
-                    { placeHolder: 'Select SQL dialect' }
-                );
-                if (!choice) return;
+            Logger.info(`Applying auto-fix: ${choice}`);
 
-                logInfo(`Applying auto-fix: ${choice}`);
-
-                const dialect = choice.toLowerCase() as SqlDialect;
+            const dialect = Validator.parseSqlDialect(choice);
+            if (dialect) {
                 await SqlHelper.applyAutoFix(editor, dialect);
-
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-                logError(`autoFix error: ${msg}`);
-                showError('Error applying auto-fix.');
             }
         }
-    );
+    }, context);
 
-    // =====================================================
-    // 🔹 COMANDO: GENERAR PROYECTO COMPLETO
-    // =====================================================
-    const generateProjectCommand = vscode.commands.registerCommand(
-        'sql-helper.generateProject',
-        async () => {
-            try {
-                logInfo('Launching project generator...');
-                await showProjectGenerator();
-
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-                logError(`generateProject error: ${msg}`);
-                showError('Error generating project.');
-            }
+    // Comando: Generar Proyecto
+    commandManager.registerCommand({
+        id: 'sql-helper.generateProject',
+        title: 'SQL Helper: Generate project',
+        handler: async () => {
+            Logger.info('Launching project generator...');
+            await showProjectGenerator();
         }
-    );
-
-    // =====================================================
-    // 🔹 REGISTRO DE COMANDOS
-    // =====================================================
-    context.subscriptions.push(
-        insertSnippetCommand,
-        analyzeSqlCommand,
-        formatSqlCommand,
-        autoFixSqlCommand,
-        generateProjectCommand
-    );
+    }, context);
 }
 
 export function deactivate() {
-    logInfo(`${EXTENSION_NAME} deactivated`);
+    Logger.info(`${EXTENSION_NAME} deactivated`);
 }

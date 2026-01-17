@@ -12,25 +12,25 @@ export async function chooseJavaFramework() {
     ];
 
     const selectedFramework = await vscode.window.showQuickPick(frameworks, { placeHolder: "Choose a Java framework" });
-    if (!selectedFramework) return;
+    if (!selectedFramework) {return;}
 
     const javaVersion = await askJavaVersion();
-    if (!javaVersion) return;
+    if (!javaVersion) {return;}
 
     const version = await askFrameworkVersion(selectedFramework.label);
-    if (!version) return;
+    if (!version) {return;}
 
     const buildTool = await chooseBuildTool();
-    if (!buildTool) return;
+    if (!buildTool) {return;}
 
     const db = await chooseDatabase();
-    if (!db) return;
+    if (!db) {return;}
 
     const dbDetails = await askDatabaseDetails();
-    if (!dbDetails) return;
+    if (!dbDetails) {return;}
 
     const folderUri = await vscode.window.showOpenDialog({ canSelectFolders: true });
-    if (!folderUri) return;
+    if (!folderUri) {return;}
 
     const projectPath = path.join(folderUri[0].fsPath, "app"); // por simplicidad
 
@@ -75,17 +75,17 @@ async function chooseDatabase(): Promise<Database | undefined> {
 
 async function askDatabaseDetails(): Promise<{ dbName: string; tables: string[] } | undefined> {
     const dbName = await vscode.window.showInputBox({ placeHolder: "Enter database name", value: "mydb" });
-    if (!dbName) return;
+    if (!dbName) {return;}
 
     const numTablesStr = await vscode.window.showInputBox({ placeHolder: "Enter number of tables", value: "1" });
-    if (!numTablesStr) return;
+    if (!numTablesStr) {return;}
     const numTables = parseInt(numTablesStr);
-    if (isNaN(numTables) || numTables <= 0) return;
+    if (isNaN(numTables) || numTables <= 0) {return;}
 
     const tables: string[] = [];
     for (let i = 0; i < numTables; i++) {
         const tableName = await vscode.window.showInputBox({ placeHolder: `Enter name of table ${i + 1}`, value: `table${i + 1}` });
-        if (!tableName) return;
+        if (!tableName) {return;}
         tables.push(tableName);
     }
 

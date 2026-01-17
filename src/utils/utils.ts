@@ -19,7 +19,7 @@ export async function chooseDatabase(): Promise<string | null> {
 export async function createBaseFolder(name: string): Promise<string | null> {
     try {
         const folder = path.join(process.env.HOME || process.cwd(), name);
-        if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
+        if (!fs.existsSync(folder)) {fs.mkdirSync(folder, { recursive: true });}
         return folder;
     } catch (err) {
         vscode.window.showErrorMessage("Error creating folder: " + err);

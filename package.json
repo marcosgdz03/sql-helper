@@ -2,7 +2,7 @@
   "name": "sql-helper",
   "displayName": "SQL Helper",
   "description": "Advanced extension with SQL, Java JDBC, Python and JavaScript/TypeScript snippets for databases",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "publisher": "marcosgdz03",
   "engines": {
     "vscode": "^1.106.0"
@@ -97,13 +97,16 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.106.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.0.0",
-    "typescript": "^5.9.3",
+    "@types/vscode": "^1.106.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.39.1",
-    "@typescript-eslint/eslint-plugin": "^6.10.0",
-    "@typescript-eslint/parser": "^6.10.0",
-    "@vscode/test-electron": "^2.4.1"
+    "glob": "^13.0.0",
+    "mocha": "^11.7.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.53.0"
   }
 }

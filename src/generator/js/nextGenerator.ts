@@ -5,7 +5,7 @@ import { selectFolder } from "./expressGenerator";
 
 function ensureDir(parent: string, name: string) {
     const dirPath = path.join(parent, name);
-    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath);
+    if (!fs.existsSync(dirPath)) {fs.mkdirSync(dirPath);}
 }
 
 function writeFile(location: string, fileName: string, content: string) {
@@ -18,7 +18,7 @@ function writeFile(location: string, fileName: string, content: string) {
  */
 export async function generateNextProject() {
     const folder = await selectFolder();
-    if (!folder) return;
+    if (!folder) {return;}
 
     ensureDir(folder, "pages");
     ensureDir(folder, "public");
