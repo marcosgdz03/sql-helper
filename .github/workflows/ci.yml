@@ -35,7 +35,7 @@ jobs:
 
       # 6️⃣ Tests con vscode-test
       - name: Run VS Code extension tests
-        run: npm test
+        run: xvfb-run -a npm test
 
       # 7️⃣ Package VSIX
       - name: Package VSIX
