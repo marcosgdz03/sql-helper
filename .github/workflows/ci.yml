@@ -45,7 +45,7 @@ jobs:
 
       # 8️⃣ Subir VSIX como artefacto
       - name: Upload VSIX artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sql-helper-vsix
           path: "*.vsix"
