@@ -1,0 +1,14 @@
+{
+  "templateName": "rest-template",
+  "description": "Simple REST API structure",
+  "version": "1.0.0",
+  "config": {
+    "package": "RestController",
+    "architecture": "simple-rest",
+    "files": {
+      "controllers": ["userController", "productController"],
+      "models": ["User", "Product"],
+      "services": ["UserService", "ProductService"]
+    }
+  }
+}

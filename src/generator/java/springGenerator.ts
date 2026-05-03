@@ -1,7 +1,51 @@
+import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 
 type Database = "PostgreSQL" | "MySQL" | "SQLite";
+
+interface Template {
+    name: string;
+    description: string;
+    config: {
+        package: string;
+        architecture: string;
+    };
+}
+
+export async function chooseSpringTemplate(): Promise<Template | undefined> {
+    const templates: vscode.QuickPickItem[] = [
+        { 
+            label: "📄 REST API Template", 
+            description: "Simple REST controllers"
+        },
+        { 
+            label: "🏛️ Clean Architecture", 
+            description: "Ports & Adapters pattern"
+        },
+        { 
+            label: "🔗 Microservices", 
+            description: "Spring Cloud services"
+        },
+    ];
+    
+    const selected = await vscode.window.showQuickPick(templates, {
+        placeHolder: "Choose Spring Boot template"
+    });
+    
+    if (!selected) {
+        return;
+    }
+    
+    return {
+        name: selected.label,
+        description: selected.description || "",
+        config: {
+            package: "com.example.app",
+            architecture: selected.label.toLowerCase().replace(/\s+/g, "-"),
+        } as any
+    };
+}
 
 export async function generateSpringProject(
     projectPath: string,
@@ -16,15 +60,28 @@ export async function generateSpringProject(
 
     fs.mkdirSync(basePackage, { recursive: true });
     fs.mkdirSync(resources, { recursive: true });
-    ["model", "dao", "controller"].forEach(folder => fs.mkdirSync(path.join(basePackage, folder), { recursive: true }));
+    ["model", "dao", "controller"].forEach(folder => 
+        fs.mkdirSync(path.join(basePackage, folder), { recursive: true })
+    );
 
-    fs.writeFileSync(path.join(basePackage, "Application.java"), generateMainClass());
+    const application = generateMainClass();
+    fs.writeFileSync(path.join(basePackage, "Application.java"), application);
 
-    fs.writeFileSync(path.join(resources, "application.properties"), generateSpringProperties(db, dbDetails.dbName));
-    fs.writeFileSync(path.join(resources, "init.sql"), generateInitSql(dbDetails.dbName, dbDetails.tables, db));
+    const props = generateSpringProperties(db, dbDetails.dbName);
+    fs.writeFileSync(path.join(resources, "application.properties"), props);
 
-    if (buildTool === "maven") {fs.writeFileSync(path.join(projectPath, "pom.xml"), `<!-- POM for Spring Boot ${version} -->`);}
-    else {fs.writeFileSync(path.join(projectPath, "build.gradle"), `// Gradle for Spring Boot ${version}`);}
+    const sql = generateInitSql(dbDetails.dbName, dbDetails.tables, db);
+    fs.writeFileSync(path.join(resources, "init.sql"), sql);
+
+    if (buildTool === "maven") {
+        fs.writeFileSync(path.join(projectPath, "pom.xml"), 
+            `<!-- POM for Spring Boot ${version} -->`
+        );
+    } else {
+        fs.writeFileSync(path.join(projectPath, "build.gradle"), 
+            `// Gradle for Spring Boot ${version}`
+        );
+    }
 
     console.log(`Spring Boot project generated at ${projectPath}`);
 }
@@ -44,20 +101,88 @@ public class Application {
 }
 
 function generateSpringProperties(db: Database, dbName: string) {
-    let props = `server.port=8080\nspring.application.name=app\n`;
+    const props: string[] = ["server.port=8080", `spring.application.name=${dbName}`];
+    
     switch (db) {
-        case "PostgreSQL": props += `spring.datasource.url=jdbc:postgresql://localhost:5432/${dbName}\nspring.datasource.username=postgres\nspring.datasource.password=secret\n`; break;
-        case "MySQL": props += `spring.datasource.url=jdbc:mysql://localhost:3306/${dbName}\nspring.datasource.username=root\nspring.datasource.password=secret\n`; break;
-        case "SQLite": props += `spring.datasource.url=jdbc:sqlite:${dbName}.sqlite\n`; break;
+        case "PostgreSQL": 
+            props.push("spring.datasource.url=jdbc:postgresql://localhost:5432/");
+            props.push(`${dbName}?schema=public`);
+            props.push("spring.datasource.username=postgres");
+            props.push("spring.datasource.password=secret");
+            break;
+        case "MySQL": 
+            props.push("spring.datasource.url=jdbc:mysql://localhost:3306/");
+            props.push(`${dbName}?createDatabaseIfNotExist=true`);
+            props.push("spring.datasource.username=root");
+            props.push("spring.datasource.password=secret");
+            break;
+        case "SQLite": 
+            props.push(`spring.datasource.url=jdbc:sqlite:${dbName}.sqlite`);
+            break;
     }
-    return props;
+    
+    return props.join("\\n");
 }
 
 function generateInitSql(dbName: string, tables: string[], db: Database) {
-    let sql = db !== "SQLite" ? `CREATE DATABASE IF NOT EXISTS ${dbName};\nUSE ${dbName};\n\n` : "";
+    const lines: string[] = [];
+    
+    if (db !== "SQLite") {
+        lines.push(`CREATE DATABASE IF NOT EXISTS ${dbName};`);
+        lines.push(`USE ${dbName};`);
+        lines.push("");
+    }
+    
     tables.forEach(table => {
-        const idType = db === "PostgreSQL" ? "BIGSERIAL" : db === "MySQL" ? "BIGINT AUTO_INCREMENT" : "INTEGER PRIMARY KEY AUTOINCREMENT";
-        sql += `CREATE TABLE IF NOT EXISTS ${table} (\n  id ${idType},\n  name VARCHAR(255),\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\n`;
+        const idType = db === "PostgreSQL" ? "BIGSERIAL" : 
+                       db === "MySQL" ? "BIGINT AUTO_INCREMENT" : 
+                       "INTEGER PRIMARY KEY AUTOINCREMENT";
+        
+        lines.push(`CREATE TABLE IF NOT EXISTS ${table} (
+  id ${idType},
+  name VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);`);
+        lines.push("");
     });
-    return sql;
+    
+    return lines.join("\\n");
+}
+
+async function generateControllers(tables: string[]): Promise<void> {
+    const controllersDir = path.join(
+        process.cwd(),
+        "src", "generator", "java", "controllers"
+    );
+    
+    if (!fs.existsSync(controllersDir)) {
+        fs.mkdirSync(controllersDir, { recursive: true });
+    }
+    
+    const controllers = [
+        `UserController.java`,
+        `ProductController.java`
+    ];
+    
+    controllers.forEach(controller => {
+        const controllerPath = path.join(controllersDir, controller);
+        const controllerName = controller.replace(".java", "");
+        
+        fs.writeFileSync(
+            controllerPath,
+            `package com.example.app.controller;
+
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/${controllerName.toLowerCase()}")
+public class ${controllerName}Controller {
+    
+    @GetMapping
+    public List<String> getAll() {
+        return List.of();
+    }
+}`
+        );
+    });
 }

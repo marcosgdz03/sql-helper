@@ -1,0 +1,16 @@
+{
+  "templateName": "clean-architecture",
+  "description": "Clean Architecture with ports and adapters",
+  "version": "1.0.0",
+  "config": {
+    "package": "CleanArch",
+    "architecture": "clean-architecture",
+    "layers": ["domain", "application", "infrastructure", "presentation"],
+    "files": {
+      "domain": ["User", "UserService", "UserRepository"],
+      "application": ["UserApp", "UserCommand"],
+      "infrastructure": ["UserEntity", "MySQLEntity"],
+      "presentation": ["UserController", "UserRequest", "UserResponse"]
+    }
+  }
+}

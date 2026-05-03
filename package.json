@@ -2,7 +2,7 @@
   "name": "sql-helper",
   "displayName": "SQL Helper",
   "description": "Advanced extension with SQL, Java JDBC, Python and JavaScript/TypeScript snippets for databases",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "publisher": "marcosgdz03",
   "engines": {
     "vscode": "^1.106.0"
@@ -93,7 +93,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint 'src/**/*.{ts,js}'",
+    "lint": "eslint src/**/*.ts",
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
