@@ -5,26 +5,35 @@ import { chooseJsFramework } from "../generator/jsGenerator";
 
 export async function showProjectGenerator() {
     const languages: vscode.QuickPickItem[] = [
-        { label: "Java", description: "Generate Java project boilerplate" },
-        { label: "Python", description: "Generate Python project boilerplate" },
-        { label: "JavaScript / TypeScript", description: "Generate JS/TS project boilerplate" }
+        { 
+            label: "🔥 Java", 
+            description: "Generate Spring Boot, Micronaut or Quarkus project" 
+        },
+        { 
+            label: "🐍 Python", 
+            description: "Generate Flask or FastAPI project" 
+        },
+        { 
+            label: "⚡ JavaScript / TypeScript", 
+            description: "Generate Express, NestJS or Next.js project" 
+        }
     ];
 
     const selectedLanguage = await vscode.window.showQuickPick(languages, {
-        placeHolder: "Choose a language for your project"
+        placeHolder: "Select a programming language to generate your project"
     });
 
-    if (!selectedLanguage) {return;}
-
-    switch (selectedLanguage.label) {
-        case "Java":
-            await chooseJavaFramework();
-            break;
-        case "Python":
-            await choosePythonFramework();
-            break;
-        case "JavaScript / TypeScript":
-            await chooseJsFramework();
-            break;
+    if (!selectedLanguage) {
+        console.log("Project selection cancelled");
+        return;
     }
+
+
+    const actions: Record<string, () => Promise<void>> = {
+        "🔥 Java": () => chooseJavaFramework(),
+        "🐍 Python": () => choosePythonFramework(),
+        "⚡ JavaScript / TypeScript": () => chooseJsFramework()
+    };
+
+    await actions[selectedLanguage.label]?.();
 }

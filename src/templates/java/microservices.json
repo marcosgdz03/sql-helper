@@ -1,0 +1,29 @@
+{
+  "templateName": "microservices",
+  "description": "Microservices architecture with Spring Cloud",
+  "version": "1.0.0",
+  "config": {
+    "package": "Microservice",
+    "architecture": "microservices",
+    "services": {
+      "user-service": {
+        "package": "userService",
+        "controllers": ["UserController"],
+        "models": ["User"],
+        "services": ["UserService"],
+        "ports": ["UserPort"]
+      },
+      "product-service": {
+        "package": "productService",
+        "controllers": ["ProductController"],
+        "models": ["Product"],
+        "services": ["ProductService"],
+        "ports": ["ProductPort"]
+      }
+    },
+    "config": {
+      "discovery": "eureka",
+      "gateway": "spring-cloud-gateway"
+    }
+  }
+}
